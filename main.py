@@ -325,4 +325,4 @@ if __name__ == "__main__":
           f"(threshold={thresh_f1['best_threshold']:.3f})")
 
     n_sig = sum(1 for pr in pairwise_results if pr["mcnemar_sig"])
-    print(f"\n  Pairwise McNemar: {n_sig}/{len(pairwise_results)} comparisons significant at α=0.05")
+    print(f"\n  Pairwise McNemar: {n_sig}/{len(pairwise_results)} comparisons significant at alpha=0.05")

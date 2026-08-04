@@ -1,5 +1,7 @@
 {
-  "f1_optimal_threshold": 0.357537688442211,
-  "f1_optimal_score": 0.7437943262411347,
-  "f1_with_optimised_threshold": 0.7437943262411347
+  "f1_optimal_threshold": 0.3304020100502512,
+  "f1_optimal_score": 0.7462555066079295,
+  "acc_optimal_threshold": 0.45703517587939696,
+  "acc_optimal_score": 0.7252024291497976,
+  "f1_with_optimised_threshold": 0.7462555066079295
 }
