@@ -1,9 +1,9 @@
 """Model zoo: training, hyperparameter tuning, and evaluation utilities.
 
-Implements three classifiers used in the comparative study — Logistic
-Regression, Random Forest, and XGBoost — together with a shared evaluation
-routine that computes Accuracy, Precision, Recall, F1-Score, and ROC-AUC and
-persists the ROC curves and confusion matrices into ``plots/``.
+Implements four classifiers — Logistic Regression, Random Forest, XGBoost,
+and LightGBM — together with a stacking ensemble that combines all four.
+Evaluation computes Accuracy, Precision, Recall, F1-Score, ROC-AUC, and
+Brier score, and persists ROC curves and confusion matrices into ``plots/``.
 """
 
 from __future__ import annotations
@@ -18,12 +18,14 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     ConfusionMatrixDisplay,
     RocCurveDisplay,
     accuracy_score,
+    brier_score_loss,
     f1_score,
     precision_score,
     recall_score,
@@ -33,6 +35,7 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 
 matplotlib.use("Agg")
 
@@ -46,25 +49,43 @@ MetricDict = dict[str, float]
 LOGISTIC_REGRESSION = "logistic_regression"
 RANDOM_FOREST = "random_forest"
 XGBOOST = "xgboost"
+LIGHTGBM = "lightgbm"
+STACKING = "stacking"
+
+# ----------------------------------------------------------------------
+# Hyperparameter grids — deliberately wide to allow genuine tuning
+# ----------------------------------------------------------------------
 
 LOGISTIC_GRID: dict[str, list[Any]] = {
     "model__C": [0.01, 0.1, 1.0, 10.0],
     "model__solver": ["liblinear"],
-    "model__penalty": ["l2"],
+    "model__l1_ratio": [0.0],
 }
 
 RANDOM_FOREST_GRID: dict[str, list[Any]] = {
-    "model__n_estimators": [200, 400],
-    "model__max_depth": [10, 20, None],
+    "model__n_estimators": [300, 500],
+    "model__max_depth": [15, None],
     "model__min_samples_leaf": [1, 2],
 }
 
 XGBOOST_GRID: dict[str, list[Any]] = {
-    "model__n_estimators": [200, 400],
-    "model__max_depth": [3, 6],
-    "model__learning_rate": [0.05, 0.1],
-    "model__subsample": [0.8],
+    "model__n_estimators": [300, 500],
+    "model__max_depth": [5, 7],
+    "model__learning_rate": [0.01, 0.1],
+    "model__reg_alpha": [0, 0.1],
 }
+
+LIGHTGBM_GRID: dict[str, list[Any]] = {
+    "model__n_estimators": [300, 500],
+    "model__max_depth": [5, -1],
+    "model__learning_rate": [0.01, 0.1],
+    "model__num_leaves": [31, 63],
+}
+
+
+# ----------------------------------------------------------------------
+# Pipeline construction
+# ----------------------------------------------------------------------
 
 
 def build_pipeline(
@@ -88,13 +109,15 @@ def build_pipeline(
 
 
 def make_models() -> dict[str, ModelEstimator]:
-    """Instantiate the three baseline estimators with fixed seeds.
+    """Instantiate the base estimators with fixed seeds.
 
     Returns:
         A mapping of model name to an untuned estimator instance.
     """
     return {
-        LOGISTIC_REGRESSION: LogisticRegression(max_iter=2000, random_state=SEED),
+        LOGISTIC_REGRESSION: LogisticRegression(
+            max_iter=5000, random_state=SEED
+        ),
         RANDOM_FOREST: RandomForestClassifier(n_jobs=-1, random_state=SEED),
         XGBOOST: XGBClassifier(
             n_jobs=-1,
@@ -102,6 +125,12 @@ def make_models() -> dict[str, ModelEstimator]:
             eval_metric="logloss",
             tree_method="hist",
             verbosity=0,
+        ),
+        LIGHTGBM: LGBMClassifier(
+            n_jobs=-1,
+            random_state=SEED,
+            verbose=-1,
+            importance_type="gain",
         ),
     }
 
@@ -116,7 +145,13 @@ def get_hyperparameter_grids() -> dict[str, dict[str, list[Any]]]:
         LOGISTIC_REGRESSION: LOGISTIC_GRID,
         RANDOM_FOREST: RANDOM_FOREST_GRID,
         XGBOOST: XGBOOST_GRID,
+        LIGHTGBM: LIGHTGBM_GRID,
     }
+
+
+# ----------------------------------------------------------------------
+# Training
+# ----------------------------------------------------------------------
 
 
 def tune_model(
@@ -138,17 +173,68 @@ def tune_model(
     Returns:
         The fitted ``GridSearchCV`` object exposing ``best_estimator_``.
     """
-    splitter = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=SEED)
+    splitter = StratifiedKFold(
+        n_splits=CV_FOLDS, shuffle=True, random_state=SEED
+    )
     search = GridSearchCV(
         estimator=pipeline,
         param_grid=grid,
         scoring="accuracy",
         cv=splitter,
-        n_jobs=-1,
+        n_jobs=1,
         verbose=1,
     )
     search.fit(X_train, y_train)
     return search
+
+
+def build_stacking_ensemble(
+    base_estimators: dict[str, Pipeline],
+) -> StackingClassifier:
+    """Build a stacking ensemble that combines all tuned base estimators.
+
+    The meta-learner is a regularised logistic regression trained on
+    out-of-fold predictions from the base estimators.
+
+    Args:
+        base_estimators: Mapping of model name to fitted ``Pipeline``.
+
+    Returns:
+        A ``StackingClassifier`` ready for cross-validated evaluation.
+    """
+    estimators = [(name, est) for name, est in base_estimators.items()]
+    return StackingClassifier(
+        estimators=estimators,
+        final_estimator=LogisticRegression(
+            C=1.0, max_iter=5000, random_state=SEED
+        ),
+        cv=StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=SEED),
+        stack_method="predict_proba",
+        n_jobs=1,
+    )
+
+
+# ----------------------------------------------------------------------
+# Prediction & evaluation
+# ----------------------------------------------------------------------
+
+
+def predict_estimator(
+    estimator: ModelEstimator,
+    X_test: pd.DataFrame,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return hard and soft predictions from a fitted estimator.
+
+    Args:
+        estimator: Fitted estimator supporting ``predict``/``predict_proba``.
+        X_test: Test feature matrix.
+
+    Returns:
+        A tuple ``(y_pred, y_prob)`` of predicted labels and probabilities.
+    """
+    y_pred = estimator.predict(X_test)
+    y_prob = estimator.predict_proba(X_test)[:, 1]
+    return np.asarray(y_pred), np.asarray(y_prob)
 
 
 def evaluate_model(
@@ -170,7 +256,8 @@ def evaluate_model(
         y_prob: Predicted positive-class probabilities.
 
     Returns:
-        A dictionary with accuracy, precision, recall, F1, and ROC-AUC.
+        A dictionary with accuracy, precision, recall, F1, ROC-AUC, and
+        Brier score.
     """
     metrics: MetricDict = {
         "accuracy": float(accuracy_score(y_test, y_pred)),
@@ -178,26 +265,14 @@ def evaluate_model(
         "recall": float(recall_score(y_test, y_pred)),
         "f1": float(f1_score(y_test, y_pred)),
         "roc_auc": float(roc_auc_score(y_test, y_prob)),
+        "brier": float(brier_score_loss(y_test, y_prob)),
     }
     return metrics
 
 
-def predict_estimator(
-    estimator: ModelEstimator,
-    X_test: pd.DataFrame,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return hard and soft predictions from a fitted estimator.
-
-    Args:
-        estimator: Fitted estimator supporting ``predict``/``predict_proba``.
-        X_test: Test feature matrix.
-
-    Returns:
-        A tuple ``(y_pred, y_prob)`` of predicted labels and probabilities.
-    """
-    y_pred = estimator.predict(X_test)
-    y_prob = estimator.predict_proba(X_test)[:, 1]
-    return np.asarray(y_pred), np.asarray(y_prob)
+# ----------------------------------------------------------------------
+# Visualisation
+# ----------------------------------------------------------------------
 
 
 def plot_roc_curves(
@@ -252,6 +327,11 @@ def plot_confusion_matrix(
     ax.set_title(f"Normalised Confusion Matrix — {model_name}")
     fig.savefig(output_dir / f"confusion_matrix_{model_name}.png")
     plt.close(fig)
+
+
+# ----------------------------------------------------------------------
+# Persistence
+# ----------------------------------------------------------------------
 
 
 def save_metrics(
