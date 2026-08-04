@@ -1,6 +1,5 @@
 # Dataset files
 *.zip
-paper/
 
 # Virtual environments
 venv/
@@ -31,5 +30,9 @@ Thumbs.db
 
 # Jupyter notebooks checkpoint files
 .ipynb_checkpoints/
-paper/*
-paper/
+
+# LaTeX build artifacts (but allow paper/*.pdf and paper/*.tex)
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
