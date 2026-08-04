@@ -31,8 +31,5 @@ Thumbs.db
 # Jupyter notebooks checkpoint files
 .ipynb_checkpoints/
 
-# LaTeX build artifacts (but allow paper/*.pdf and paper/*.tex)
-paper/*.aux
-paper/*.log
-paper/*.out
-paper/*.toc
+# Paper folder
+paper/
