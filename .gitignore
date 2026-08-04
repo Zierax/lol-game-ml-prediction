@@ -1,7 +1,6 @@
 # Dataset files
-*.csv
 *.zip
-data/
+paper/
 
 # Virtual environments
 venv/
@@ -32,3 +31,5 @@ Thumbs.db
 
 # Jupyter notebooks checkpoint files
 .ipynb_checkpoints/
+paper/*
+paper/
