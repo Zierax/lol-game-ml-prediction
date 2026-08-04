@@ -3,6 +3,9 @@
 This module is responsible for locating the raw dataset, validating its
 schema, dropping identifier and perfectly-redundant mirrored columns, and
 returning a feature matrix :math:`X` together with the target vector :math:`y`.
+
+It also exposes an ``load_engineered_dataset`` entry point that chains
+cleaning with the feature-engineering step from ``src.features``.
 """
 
 from __future__ import annotations
@@ -137,7 +140,7 @@ def load_dataset(
     path: str | Path | None = None,
     target_column: str = TARGET_COLUMN,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """End-to-end loading and cleaning entry point.
+    """End-to-end loading and cleaning entry point (raw features only).
 
     Args:
         path: Optional path to the raw CSV file.
@@ -151,3 +154,26 @@ def load_dataset(
     y: pd.Series = cleaned[target_column].astype(int)
     X: pd.DataFrame = cleaned.drop(columns=[target_column])
     return X, y
+
+
+def load_engineered_dataset(
+    path: str | Path | None = None,
+    target_column: str = TARGET_COLUMN,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Load, clean, and engineer features in one call.
+
+    This chains ``load_dataset`` with ``src.features.engineer_features``
+    so that the caller gets the full enriched feature matrix in one step.
+
+    Args:
+        path: Optional path to the raw CSV file.
+        target_column: Name of the binary target column.
+
+    Returns:
+        A tuple ``(X, y)`` of the enriched feature matrix and target vector.
+    """
+    from src.features import engineer_features
+
+    X_raw, y = load_dataset(path, target_column)
+    X_eng = engineer_features(X_raw)
+    return X_eng, y
