@@ -25,12 +25,12 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.model_selection import (
+    GridSearchCV,
     StratifiedKFold,
-    cross_val_predict,
 )
 
 SEED: int = 42
-NESTED_OUTER_FOLDS: int = 10
+NESTED_OUTER_FOLDS: int = 5
 NESTED_INNER_FOLDS: int = 5
 BOOTSTRAP_N_ITER: int = 2000
 CI_LEVEL: float = 0.95
@@ -45,38 +45,42 @@ ModelEstimator = BaseEstimator | ClassifierMixin
 
 def nested_cv_evaluate(
     model: ModelEstimator,
+    param_grid: dict[str, list[Any]],
     X: pd.DataFrame,
     y: pd.Series,
     outer_folds: int = NESTED_OUTER_FOLDS,
     inner_folds: int = NESTED_INNER_FOLDS,
+    scoring: str = "accuracy",
 ) -> dict[str, Any]:
-    """Estimate out-of-fold performance via nested stratified CV.
+    """Estimate out-of-fold performance via true nested stratified CV.
 
     The outer loop provides unbiased performance estimates.  The inner
-    loop is used only for hyperparameter tuning (caller is responsible
-    for providing an already-tuned estimator or a param grid).
-
-    For this implementation the caller passes a pre-tuned pipeline and
-    we evaluate it with outer-fold cross-validation only, which is the
-    correct way to get an unbiased estimate of the tuned model's
-    generalisation performance.
+    loop performs hyperparameter tuning on each outer training fold using
+    GridSearchCV, so the reported metric is free from both data leakage
+    and tuning-selection bias.
 
     Args:
-        model: A fitted or tuneable estimator (pipeline).
+        model: An untuned estimator (pipeline) to be cloned each fold.
+        param_grid: GridSearchCV parameter grid for the inner loop.
         X: Full feature matrix.
         y: Full target vector.
         outer_folds: Number of outer CV folds.
-        inner_folds: Number of inner CV folds (informational).
+        inner_folds: Number of inner CV folds for the inner tuning loop.
+        scoring: Scoring metric for GridSearchCV in the inner loop.
 
     Returns:
         Dictionary with mean and std of each metric across outer folds,
-        plus per-fold values.
+        plus per-fold values and per-fold best inner params.
     """
     outer_cv = StratifiedKFold(
         n_splits=outer_folds, shuffle=True, random_state=SEED
     )
+    inner_cv = StratifiedKFold(
+        n_splits=inner_folds, shuffle=True, random_state=SEED
+    )
 
     fold_metrics: list[dict[str, float]] = []
+    fold_params: list[dict[str, Any]] = []
 
     for fold_idx, (train_idx, test_idx) in enumerate(outer_cv.split(X, y)):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
@@ -84,11 +88,19 @@ def nested_cv_evaluate(
 
         from sklearn.base import clone
 
-        estimator_clone = clone(model)
-        estimator_clone.fit(X_train, y_train)
+        inner_search = GridSearchCV(
+            estimator=clone(model),
+            param_grid=param_grid,
+            scoring=scoring,
+            cv=inner_cv,
+            n_jobs=1,
+            refit=True,
+        )
+        inner_search.fit(X_train, y_train)
 
-        y_pred = estimator_clone.predict(X_test)
-        y_prob = estimator_clone.predict_proba(X_test)[:, 1]
+        best_estimator = inner_search.best_estimator_
+        y_pred = best_estimator.predict(X_test)
+        y_prob = best_estimator.predict_proba(X_test)[:, 1]
 
         fold_metrics.append(
             {
@@ -99,10 +111,12 @@ def nested_cv_evaluate(
                 "roc_auc": float(roc_auc_score(y_test, y_prob)),
             }
         )
+        fold_params.append(inner_search.best_params_)
 
     df = pd.DataFrame(fold_metrics)
     summary: dict[str, Any] = {
         "per_fold": fold_metrics,
+        "per_fold_params": fold_params,
         "mean": df.mean().to_dict(),
         "std": df.std().to_dict(),
         "median": df.median().to_dict(),

@@ -148,7 +148,7 @@ def plot_feature_importance(
     X: pd.DataFrame,
     y: pd.Series,
     output_dir: Path,
-) -> None:
+) -> pd.Series:
     """Render the random-forest Gini importance bar chart.
 
     Args:

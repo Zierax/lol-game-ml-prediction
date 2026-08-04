@@ -16,9 +16,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -58,8 +56,8 @@ STACKING = "stacking"
 
 LOGISTIC_GRID: dict[str, list[Any]] = {
     "model__C": [0.01, 0.1, 1.0, 10.0],
+    "model__penalty": ["l1", "l2"],
     "model__solver": ["liblinear"],
-    "model__l1_ratio": [0.0],
 }
 
 RANDOM_FOREST_GRID: dict[str, list[Any]] = {

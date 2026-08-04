@@ -6,22 +6,23 @@ Steps:
 3. Split into stratified train / test sets.
 4. Train and tune four base classifiers + stacking ensemble.
 5. Evaluate on held-out test set with full metrics.
-6. Run nested CV for unbiased performance estimation.
-7. Perform pairwise significance tests.
+6. Run true nested CV for unbiased performance estimation.
+7. Perform all-pairs significance tests (McNemar, paired bootstrap).
 8. Optimise decision thresholds.
 9. Persist all results and visualisations.
 """
 
 from __future__ import annotations
 
+import itertools
 import json
 import pathlib
 import sys
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from sklearn.base import clone
-from sklearn.metrics import RocCurveDisplay
+from sklearn.metrics import RocCurveDisplay, f1_score
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from src.data_loader import load_engineered_dataset
@@ -54,6 +55,13 @@ from src.models import (
 )
 
 SEED: int = 42
+
+BASE_CLASSIFIERS: list[str] = [
+    LOGISTIC_REGRESSION,
+    RANDOM_FOREST,
+    XGBOOST,
+    LIGHTGBM,
+]
 
 
 def _print_section(title: str) -> None:
@@ -113,11 +121,11 @@ if __name__ == "__main__":
     models = make_models()
     grids = get_hyperparameter_grids()
 
-    tuned_pipelines: dict[str, any] = {}
+    tuned_pipelines: dict[str, Any] = {}
     results: dict[str, dict[str, float]] = {}
     roc_displays: dict[str, RocCurveDisplay] = {}
 
-    for name in [LOGISTIC_REGRESSION, RANDOM_FOREST, XGBOOST, LIGHTGBM]:
+    for name in BASE_CLASSIFIERS:
         base = models[name]
         pipeline = build_pipeline(base)
         print(f"\nTuning {name}...")
@@ -169,16 +177,25 @@ if __name__ == "__main__":
     print(f"ROC curves saved to {eda_dir}/roc_curve.png")
 
     # ------------------------------------------------------------------
-    # 7. Nested CV evaluation of the best model
+    # 7. True nested CV for unbiased performance estimation
     # ------------------------------------------------------------------
     _print_section("STEP 7: NESTED CROSS-VALIDATION (UNBIASED ESTIMATE)")
 
-    best_model_name = max(results, key=lambda k: results[k]["f1"])
-    best_pipeline = tuned_pipelines.get(best_model_name, stacking)
-    print(f"Best model: {best_model_name} (F1={results[best_model_name]['f1']:.4f})")
-    print("Running 10-fold nested CV (may take a few minutes)...")
+    best_model_name = max(
+        [k for k in results if k != STACKING],
+        key=lambda k: results[k]["f1"],
+    )
+    overall_best = max(results, key=lambda k: results[k]["f1"])
+    best_grid = grids[best_model_name]
+    print(f"Best base model by test F1: {best_model_name} (F1={results[best_model_name]['f1']:.4f})")
+    print(f"Running 5-fold nested CV with inner 5-fold tuning...")
+    print(f"(This performs fresh hyperparameter tuning inside each outer fold)")
 
-    nested_results = nested_cv_evaluate(best_pipeline, X, y)
+    nested_results = nested_cv_evaluate(
+        build_pipeline(models[best_model_name]),
+        best_grid,
+        X, y,
+    )
     print(f"\nNested CV results for {best_model_name}:")
     for metric_name in ["accuracy", "precision", "recall", "f1", "roc_auc"]:
         m = nested_results["mean"][metric_name]
@@ -190,10 +207,10 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     _print_section("STEP 8: BOOTSTRAP CONFIDENCE INTERVALS")
 
-    best_est = tuned_pipelines.get(best_model_name, stacking)
+    best_est = tuned_pipelines.get(overall_best, stacking)
     y_prob_best = predict_estimator(best_est, X_test)[1]
     ci_results = bootstrap_ci(y_test.values, y_prob_best)
-    print(f"95% Confidence Intervals ({best_model_name}):")
+    print(f"95% Confidence Intervals ({overall_best}):")
     for metric_name, ci in ci_results.items():
         print(
             f"  {metric_name:>10s}: {ci['mean']:.4f} "
@@ -212,52 +229,49 @@ if __name__ == "__main__":
     print(f"Acc-optimal threshold:  {thresh_acc['best_threshold']:.3f} "
           f"(Acc={thresh_acc['best_score']:.4f})")
 
-    # Apply optimised threshold
     y_pred_optimised = (y_prob_best >= thresh_f1["best_threshold"]).astype(int)
-    from sklearn.metrics import f1_score as _f1
-    f1_optimised = float(_f1(y_test, y_pred_optimised))
+    f1_optimised = float(f1_score(y_test, y_pred_optimised))
     print(f"F1 with optimised threshold: {f1_optimised:.4f}")
 
     # ------------------------------------------------------------------
-    # 10. Pairwise significance tests (best vs. runner-up)
+    # 10. All-pairs significance tests
     # ------------------------------------------------------------------
-    _print_section("STEP 10: PAIRWISE SIGNIFICANCE TESTS")
+    _print_section("STEP 10: ALL-PAIRS SIGNIFICANCE TESTS")
 
-    sorted_models = sorted(results.keys(), key=lambda k: results[k]["f1"], reverse=True)
-    if len(sorted_models) >= 2:
-        model_a = sorted_models[0]
-        model_b = sorted_models[1]
-        print(f"Comparing {model_a} vs {model_b}:")
+    all_model_names = list(results.keys())
+    pairwise_results: list[dict[str, Any]] = []
 
-        y_prob_a = predict_estimator(
-            tuned_pipelines.get(model_a, stacking), X_test
-        )[1]
-        y_prob_b = predict_estimator(
-            tuned_pipelines.get(model_b, stacking), X_test
-        )[1]
+    for model_a, model_b in itertools.combinations(all_model_names, 2):
+        est_a = tuned_pipelines.get(model_a, stacking)
+        est_b = tuned_pipelines.get(model_b, stacking)
 
-        bootstrap_result = paired_bootstrap_test(
+        y_prob_a = predict_estimator(est_a, X_test)[1]
+        y_prob_b = predict_estimator(est_b, X_test)[1]
+        y_pred_a = predict_estimator(est_a, X_test)[0]
+        y_pred_b = predict_estimator(est_b, X_test)[0]
+
+        bs = paired_bootstrap_test(
             y_test.values, y_prob_a, y_prob_b, metric="accuracy"
         )
-        print(f"\n  Paired bootstrap test (accuracy):")
-        print(f"    Delta:    {bootstrap_result['delta_mean']:+.4f}")
-        print(f"    p-value:  {bootstrap_result['p_value']:.4f}")
-        print(f"    95% CI:   [{bootstrap_result['ci_lower']:.4f}, "
-              f"{bootstrap_result['ci_upper']:.4f}]")
-        print(f"    Significant at alpha=0.05: {bootstrap_result['significant']}")
+        mc = mcnemar_test(y_test.values, y_pred_a, y_pred_b)
 
-        y_pred_a = predict_estimator(
-            tuned_pipelines.get(model_a, stacking), X_test
-        )[0]
-        y_pred_b = predict_estimator(
-            tuned_pipelines.get(model_b, stacking), X_test
-        )[0]
+        pairwise_results.append({
+            "model_a": model_a,
+            "model_b": model_b,
+            "f1_a": float(results[model_a]["f1"]),
+            "f1_b": float(results[model_b]["f1"]),
+            "mcnemar_chi2": float(mc["chi2"]),
+            "mcnemar_p": float(mc["p_value"]),
+            "mcnemar_sig": bool(mc["significant"]),
+            "bootstrap_delta": float(bs["delta_mean"]),
+            "bootstrap_p": float(bs["p_value"]),
+            "bootstrap_sig": bool(bs["significant"]),
+        })
 
-        mcnemar_result = mcnemar_test(y_test.values, y_pred_a, y_pred_b)
-        print(f"\n  McNemar's test:")
-        print(f"    chi2:     {mcnemar_result['chi2']:.4f}")
-        print(f"    p-value:  {mcnemar_result['p_value']:.4f}")
-        print(f"    Significant at alpha=0.05: {mcnemar_result['significant']}")
+        sig_marker = "*" if mc["significant"] else ""
+        print(f"  {model_a:>22s} vs {model_b:<22s}  "
+              f"F1: {results[model_a]['f1']:.4f} vs {results[model_b]['f1']:.4f}  "
+              f"McNemar p={mc['p_value']:.4f}{sig_marker}")
 
     # ------------------------------------------------------------------
     # 11. Save all results
@@ -266,16 +280,12 @@ if __name__ == "__main__":
 
     metrics_path = save_metrics(results, eda_dir)
 
-    # Save nested CV results
     nested_path = eda_dir / "nested_cv_results.json"
     nested_path.write_text(json.dumps(nested_results, indent=2), encoding="utf-8")
 
-    # Save CI results
     ci_path = eda_dir / "confidence_intervals.json"
     ci_path.write_text(json.dumps(ci_results, indent=2), encoding="utf-8")
 
-    # Save threshold results
-    threshold_path = eda_dir / "threshold_optimisation.json"
     threshold_data = {
         "f1_optimal_threshold": thresh_f1["best_threshold"],
         "f1_optimal_score": thresh_f1["best_score"],
@@ -283,14 +293,21 @@ if __name__ == "__main__":
         "acc_optimal_score": thresh_acc["best_score"],
         "f1_with_optimised_threshold": f1_optimised,
     }
+    threshold_path = eda_dir / "threshold_optimisation.json"
     threshold_path.write_text(
         json.dumps(threshold_data, indent=2), encoding="utf-8"
+    )
+
+    pairwise_path = eda_dir / "pairwise_significance.json"
+    pairwise_path.write_text(
+        json.dumps(pairwise_results, indent=2), encoding="utf-8"
     )
 
     print(f"All metrics saved to {metrics_path}")
     print(f"Nested CV results saved to {nested_path}")
     print(f"Confidence intervals saved to {ci_path}")
     print(f"Threshold results saved to {threshold_path}")
+    print(f"Pairwise significance saved to {pairwise_path}")
 
     # ------------------------------------------------------------------
     # 12. Final summary
@@ -298,11 +315,14 @@ if __name__ == "__main__":
     _print_section("FINAL RESULTS")
     print_metrics_table(results)
 
-    print(f"Best model: {best_model_name}")
-    print(f"  Test F1:       {results[best_model_name]['f1']:.4f}")
-    print(f"  Test ROC-AUC:  {results[best_model_name]['roc_auc']:.4f}")
-    print(f"  Test Accuracy: {results[best_model_name]['accuracy']:.4f}")
-    print(f"\n  Nested CV F1:  {nested_results['mean']['f1']:.4f} "
+    print(f"Best model: {overall_best}")
+    print(f"  Test F1:       {results[overall_best]['f1']:.4f}")
+    print(f"  Test ROC-AUC:  {results[overall_best]['roc_auc']:.4f}")
+    print(f"  Test Accuracy: {results[overall_best]['accuracy']:.4f}")
+    print(f"\n  Nested CV F1 ({best_model_name}):  {nested_results['mean']['f1']:.4f} "
           f"± {nested_results['std']['f1']:.4f}")
     print(f"  Optimised F1:  {f1_optimised:.4f} "
           f"(threshold={thresh_f1['best_threshold']:.3f})")
+
+    n_sig = sum(1 for pr in pairwise_results if pr["mcnemar_sig"])
+    print(f"\n  Pairwise McNemar: {n_sig}/{len(pairwise_results)} comparisons significant at α=0.05")
