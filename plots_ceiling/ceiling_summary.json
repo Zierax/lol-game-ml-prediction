@@ -1,0 +1,130 @@
+{
+  "n_samples": 9879,
+  "n_features": 87,
+  "target_entropy_bits": 0.9999973317529247,
+  "top_features_mi": {
+    "compositeAdvantage": 0.16320115630144816,
+    "goldPerMinDiff": 0.15683488462283401,
+    "goldShare": 0.15569097014075162,
+    "blueGoldDiff": 0.15531012471788141,
+    "experienceShare": 0.13675437166299753,
+    "blueExperienceDiff": 0.1365035787173925,
+    "blueKDR": 0.13492768434730884,
+    "killDiff": 0.1314055458659369,
+    "redKDR": 0.13092156101089936,
+    "killParticipationDiff": 0.12867330445548264,
+    "kdrDiff": 0.1274763871991067,
+    "deathDiff": 0.12661901796606623,
+    "kdaDiff": 0.1256451662824256,
+    "redKDA": 0.12109931311962674,
+    "blueKDA": 0.11877002861161223,
+    "blueKillParticipation": 0.11693473833251833,
+    "redKillParticipation": 0.11659667053596667,
+    "levelDiff": 0.11541463254348461,
+    "blueGoldPerMin": 0.0959045816547599,
+    "blueTotalGold": 0.09502244445182884
+  },
+  "pca_variance_points": {
+    "0.5": 4,
+    "0.6": 5,
+    "0.7": 8,
+    "0.8": 11,
+    "0.9": 17,
+    "0.95": 22
+  },
+  "model_families": {
+    "logistic_regression": {
+      "test_accuracy": 0.7176113360323887,
+      "test_error": 0.2823886639676113,
+      "achieved_mi_bits": 0.23854316175401247,
+      "fano_min_error": 0.2207057942031411,
+      "fano_max_accuracy": 0.7792942057968589,
+      "information_efficiency": 1.27948006524784
+    },
+    "random_forest": {
+      "test_accuracy": 0.7135627530364372,
+      "test_error": 0.28643724696356276,
+      "achieved_mi_bits": 0.22502645271891572,
+      "fano_min_error": 0.2282629246829408,
+      "fano_max_accuracy": 0.7717370753170592,
+      "information_efficiency": 1.25485664113621
+    },
+    "xgboost": {
+      "test_accuracy": 0.6988866396761133,
+      "test_error": 0.3011133603238867,
+      "achieved_mi_bits": 0.1943288167640155,
+      "fano_min_error": 0.24649071691503135,
+      "fano_max_accuracy": 0.7535092830849687,
+      "information_efficiency": 1.2216012192770915
+    },
+    "lightgbm": {
+      "test_accuracy": 0.7191295546558705,
+      "test_error": 0.2808704453441295,
+      "achieved_mi_bits": 0.21675042945044934,
+      "fano_min_error": 0.23302471031960653,
+      "fano_max_accuracy": 0.7669752896803934,
+      "information_efficiency": 1.205324726973804
+    },
+    "svm": {
+      "test_accuracy": 0.7241902834008097,
+      "test_error": 0.2758097165991903,
+      "achieved_mi_bits": 0.19690855150950085,
+      "fano_min_error": 0.24489660752070358,
+      "fano_max_accuracy": 0.7551033924792965,
+      "information_efficiency": 1.1262292254329138
+    },
+    "knn": {
+      "test_accuracy": 0.6918016194331984,
+      "test_error": 0.3081983805668016,
+      "achieved_mi_bits": 0.1497904140802451,
+      "fano_min_error": 0.27618970110980245,
+      "fano_max_accuracy": 0.7238102988901975,
+      "information_efficiency": 1.1158938198215933
+    },
+    "mlp": {
+      "test_accuracy": 0.7201417004048583,
+      "test_error": 0.27985829959514175,
+      "achieved_mi_bits": 0.2389165037211278,
+      "fano_min_error": 0.22050076305752625,
+      "fano_max_accuracy": 0.7794992369424738,
+      "information_efficiency": 1.2691942454735623
+    },
+    "soft_voting": {
+      "test_accuracy": 0.7160931174089069,
+      "test_error": 0.2839068825910931,
+      "achieved_mi_bits": 0.23598782605593285,
+      "fano_min_error": 0.22211435616649006,
+      "fano_max_accuracy": 0.77788564383351,
+      "information_efficiency": 1.2782014071088916
+    }
+  },
+  "learning_curve": {
+    "train_sizes": [
+      0.05,
+      0.1,
+      0.2,
+      0.4,
+      0.6,
+      0.8,
+      1.0
+    ],
+    "mean_accuracy": [
+      0.6952429149797571,
+      0.7038461538461538,
+      0.7017206477732794,
+      0.7021255060728745,
+      0.7057692307692307,
+      0.7069838056680162,
+      0.7105263157894737
+    ],
+    "std_accuracy": [
+      0.007371312330377783,
+      0.006770037047850472,
+      0.004325072999842424,
+      0.004666859062104658,
+      0.0026315789473684097,
+      0.005091002566785142,
+      0.0
+    ]
+  }
+}
