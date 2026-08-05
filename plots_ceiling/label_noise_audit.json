@@ -1,0 +1,111 @@
+{
+  "clean": {
+    "logistic_regression": {
+      "test_accuracy": 0.7176113360323887,
+      "achieved_mi_bits": 0.23854316175401247
+    },
+    "lightgbm": {
+      "test_accuracy": 0.715080971659919,
+      "achieved_mi_bits": 0.22592349220876237
+    },
+    "soft_voting": {
+      "test_accuracy": 0.7201417004048583,
+      "achieved_mi_bits": 0.23386016519499553
+    }
+  },
+  "noise_sweep": {
+    "0.0": {
+      "rho": 0.0,
+      "logistic_regression": {
+        "mean_accuracy": 0.7176113360323887,
+        "std_accuracy": 0.0,
+        "mean_achieved_mi": 0.23854316175401247,
+        "std_achieved_mi": 0.0
+      },
+      "soft_voting": {
+        "mean_accuracy": 0.7201417004048581,
+        "std_accuracy": 1.1102230246251565e-16,
+        "mean_achieved_mi": 0.23386016519499553,
+        "std_achieved_mi": 0.0
+      }
+    },
+    "0.05": {
+      "rho": 0.05,
+      "logistic_regression": {
+        "mean_accuracy": 0.699055330634278,
+        "std_accuracy": 0.002751266266919727,
+        "mean_achieved_mi": 0.19545457803155697,
+        "std_achieved_mi": 0.0029239342414520766
+      },
+      "soft_voting": {
+        "mean_accuracy": 0.7022604588394062,
+        "std_accuracy": 0.003839340984055679,
+        "mean_achieved_mi": 0.19278297455653196,
+        "std_achieved_mi": 0.0013846103135167205
+      }
+    },
+    "0.1": {
+      "rho": 0.1,
+      "logistic_regression": {
+        "mean_accuracy": 0.676450742240216,
+        "std_accuracy": 0.005392836492289384,
+        "mean_achieved_mi": 0.15072245450268604,
+        "std_achieved_mi": 0.009286287612577557
+      },
+      "soft_voting": {
+        "mean_accuracy": 0.6799932523616734,
+        "std_accuracy": 0.0074415468961244275,
+        "mean_achieved_mi": 0.14943852831698368,
+        "std_achieved_mi": 0.011452439830514773
+      }
+    },
+    "0.15": {
+      "rho": 0.15,
+      "logistic_regression": {
+        "mean_accuracy": 0.655701754385965,
+        "std_accuracy": 0.008670780887919333,
+        "mean_achieved_mi": 0.11743473344991336,
+        "std_achieved_mi": 0.014385917098680564
+      },
+      "soft_voting": {
+        "mean_accuracy": 0.6578947368421053,
+        "std_accuracy": 0.010719510705342288,
+        "mean_achieved_mi": 0.11706684132307849,
+        "std_achieved_mi": 0.015689641990354684
+      }
+    },
+    "0.2": {
+      "rho": 0.2,
+      "logistic_regression": {
+        "mean_accuracy": 0.6329284750337383,
+        "std_accuracy": 0.004824679367771639,
+        "mean_achieved_mi": 0.09016513915363576,
+        "std_achieved_mi": 0.008956298200698124
+      },
+      "soft_voting": {
+        "mean_accuracy": 0.6347840755735493,
+        "std_accuracy": 0.006216439194564191,
+        "mean_achieved_mi": 0.08863412114636861,
+        "std_achieved_mi": 0.010675069689213343
+      }
+    }
+  },
+  "duration_restricted": {
+    "minute10_duration_ge_25": {
+      "n_samples": 16362,
+      "win_rate": 0.49376604327099377,
+      "target_entropy_bits": 0.9998878644406279,
+      "test_accuracy": 0.6312251756798044,
+      "achieved_mi_bits": 0.0708021199327541,
+      "fano_max_accuracy": 0.6554721920903288
+    },
+    "minute10_duration_ge_30": {
+      "n_samples": 8682,
+      "win_rate": 0.4877908316056208,
+      "target_entropy_bits": 0.9995698500579953,
+      "test_accuracy": 0.5469199769717904,
+      "achieved_mi_bits": 0.016691261204435853,
+      "fano_max_accuracy": 0.5768785924226931
+    }
+  }
+}

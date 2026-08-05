@@ -144,7 +144,13 @@ def build_signal_features(
     pca_variance: float = DEFAULT_PCA_VARIANCE,
     add_nonlinear: bool = True,
 ) -> tuple[pd.DataFrame, FeatureSelectionResult, PCAResult | None]:
-    """Full signal extraction pipeline."""
+    """Full signal extraction pipeline.
+
+    Fits feature selection and PCA on the supplied (training) data.  The
+    caller must apply ``transform_signal_features`` to any held-out data;
+    fitting selection/PCA on data that includes test rows would leak
+    test-label information into the selected features.
+    """
     selection = select_features_by_mi(X_raw, y, mi_threshold, corr_threshold)
     X_selected = X_raw[selection.selected_features]
 
@@ -157,3 +163,32 @@ def build_signal_features(
         X_final = X_pca
 
     return X_final, selection, pca_result
+
+
+def transform_signal_features(
+    X_raw: pd.DataFrame,
+    selection: FeatureSelectionResult,
+    pca_result: PCAResult | None,
+    add_nonlinear: bool = True,
+) -> pd.DataFrame:
+    """Transform held-out data using a fitted signal-extraction pipeline.
+
+    Args:
+        X_raw: Raw feature matrix (same columns as the training data).
+        selection: Fitted feature-selection result from the training side.
+        pca_result: Fitted PCA result from the training side.
+        add_nonlinear: Must match the value used in ``build_signal_features``.
+
+    Returns:
+        The transformed feature matrix with the same schema as the
+        training output of ``build_signal_features``.
+    """
+    X_selected = X_raw[selection.selected_features]
+    if pca_result is None:
+        X_pca = X_selected
+    else:
+        X_pca = transform_pca(X_selected, pca_result)
+
+    if add_nonlinear:
+        return add_nonlinear_features(X_pca)
+    return X_pca

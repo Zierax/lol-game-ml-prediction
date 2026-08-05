@@ -30,6 +30,7 @@ extracted information into optimal decisions.
 
 from __future__ import annotations
 
+import itertools
 import json
 from pathlib import Path
 from typing import Any, Callable
@@ -64,6 +65,7 @@ from src.models_v2 import (
     make_nonlinear_models,
     predict_proba_safe,
 )
+from src.evaluation import mcnemar_test
 
 matplotlib.use("Agg")
 
@@ -72,6 +74,8 @@ TEST_SIZE: float = 0.2
 MI_N_NEIGHBORS: int = 5
 MI_BIN_COUNTS: tuple[int, ...] = (10, 20, 40)
 TOP_N_FEATURES: int = 20
+BOOTSTRAP_N_ITER: int = 2000
+CI_LEVEL: float = 0.95
 
 OUTPUT_DIR: Path = Path("plots_ceiling")
 
@@ -194,6 +198,85 @@ def pca_cumulative_variance(X: pd.DataFrame) -> np.ndarray:
     return np.cumsum(pca.explained_variance_ratio_)
 
 
+def bootstrap_ci_metrics(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+) -> dict[str, dict[str, float]]:
+    """Bootstrap 95% CIs for accuracy, achieved MI, and Fano max accuracy."""
+    rng = np.random.RandomState(SEED)
+    n = len(y_true)
+    accs = np.empty(BOOTSTRAP_N_ITER)
+    mis = np.empty(BOOTSTRAP_N_ITER)
+    h_y = empirical_entropy(y_true)
+    for i in range(BOOTSTRAP_N_ITER):
+        idx = rng.choice(n, size=n, replace=True)
+        accs[i] = float(accuracy_score(y_true[idx], (y_prob[idx] >= 0.5).astype(int)))
+        mis[i] = achieved_mi_robust(y_prob[idx], y_true[idx])
+    alpha = 1.0 - CI_LEVEL
+    fano_lo = fano_max_accuracy(np.percentile(mis, 100 * (1 - alpha / 2)), h_y)
+    fano_hi = fano_max_accuracy(np.percentile(mis, 100 * alpha / 2), h_y)
+    return {
+        "accuracy": {
+            "ci_lower": float(np.percentile(accs, 100 * alpha / 2)),
+            "ci_upper": float(np.percentile(accs, 100 * (1 - alpha / 2))),
+        },
+        "achieved_mi": {
+            "ci_lower": float(np.percentile(mis, 100 * alpha / 2)),
+            "ci_upper": float(np.percentile(mis, 100 * (1 - alpha / 2))),
+        },
+        "fano_max_accuracy": {
+            "ci_lower": float(fano_lo),
+            "ci_upper": float(fano_hi),
+        },
+    }
+
+
+def pairwise_mcnemar_all(
+    y_true: np.ndarray,
+    predictions: dict[str, np.ndarray],
+) -> dict[str, Any]:
+    """McNemar tests over all pairs of the model zoo with Holm correction.
+
+    Returns per-pair statistics plus the Holm-corrected significance
+    decision (family-wise alpha 0.05).
+    """
+    names = list(predictions.keys())
+    pairs = list(itertools.combinations(names, 2))
+    n_pairs = len(pairs)
+    raw = {}
+    for a, b in pairs:
+        raw[(a, b)] = mcnemar_test(y_true, predictions[a], predictions[b])
+
+    # Holm-Bonferroni correction over all pairs.
+    sorted_pairs = sorted(
+        raw.items(), key=lambda kv: kv[1]["p_value"]
+    )
+    holm_rank = 1
+    decisions: dict[tuple[str, str], bool] = {}
+    for (a, b), res in sorted_pairs:
+        alpha_holm = 0.05 / (n_pairs - holm_rank + 1)
+        decisions[(a, b)] = res["p_value"] < alpha_holm
+        holm_rank += 1
+
+    return {
+        "n_pairs": n_pairs,
+        "method": "continuity-corrected McNemar with Holm-Bonferroni (family-wise alpha=0.05)",
+        "pairs": {
+            f"{a} vs {b}": {
+                "chi2": raw[(a, b)]["chi2"],
+                "p_value": raw[(a, b)]["p_value"],
+                "n01": raw[(a, b)]["n01"],
+                "n10": raw[(a, b)]["n10"],
+                "significant_after_holm": decisions[(a, b)],
+            }
+            for (a, b) in pairs
+        },
+        "n_significant_after_holm": int(
+            sum(1 for d in decisions.values() if d)
+        ),
+    }
+
+
 # ----------------------------------------------------------------------
 # Learning curve
 # ----------------------------------------------------------------------
@@ -228,7 +311,13 @@ def learning_curve(
         repeat_acc: list[float] = []
         for r in range(n_repeats):
             if frac >= 1.0:
-                sub_train_idx = np.arange(len(X_pool))
+                # Full pool: bootstrap-resample so the standard deviation
+                # reflects sampling variability instead of being 0 by
+                # construction (all repeats would otherwise be identical).
+                pool_rng = np.random.RandomState(SEED + r)
+                sub_train_idx = pool_rng.choice(
+                    len(X_pool), size=len(X_pool), replace=True
+                )
             else:
                 sub_splitter = StratifiedShuffleSplit(
                     n_splits=1, train_size=frac, random_state=SEED + r
@@ -297,23 +386,31 @@ def run_ceiling_analysis() -> dict[str, Any]:
 
     zoo_results: dict[str, Any] = {}
     all_prob: list[np.ndarray] = []
+    all_pred: dict[str, np.ndarray] = {}
     for name, est in zoo.items():
         est.fit(X_train, y_train)
         y_prob = predict_proba_safe(est, X_test)
         y_pred = (y_prob >= 0.5).astype(int)
         acc = float(accuracy_score(y_test, y_pred))
         mi = achieved_mi_robust(y_prob, y_test.values)
+        per_bin = {
+            str(b): achieved_mutual_information(y_prob, y_test.values, b)
+            for b in MI_BIN_COUNTS
+        }
         fano_min = fano_min_error(mi, h_y)
         efficiency = (1.0 - acc) / fano_min if fano_min > 0 else float("nan")
         zoo_results[name] = {
             "test_accuracy": acc,
             "test_error": 1.0 - acc,
             "achieved_mi_bits": mi,
+            "achieved_mi_per_bin": per_bin,
             "fano_min_error": fano_min,
             "fano_max_accuracy": 1.0 - fano_min,
             "information_efficiency": efficiency,
+            "bootstrap_ci": bootstrap_ci_metrics(y_test.values, y_prob),
         }
         all_prob.append(y_prob)
+        all_pred[name] = y_pred
         print(
             f"  {name:>20s}: acc={acc:.4f}  I(p;Y)={mi:.4f} bits  "
             f"Fano min err={fano_min:.4f}  efficiency={efficiency:.3f}"
@@ -324,19 +421,44 @@ def run_ceiling_analysis() -> dict[str, Any]:
     voting_pred = (voting_prob >= 0.5).astype(int)
     voting_acc = float(accuracy_score(y_test, voting_pred))
     voting_mi = achieved_mi_robust(voting_prob, y_test.values)
+    voting_per_bin = {
+        str(b): achieved_mutual_information(voting_prob, y_test.values, b)
+        for b in MI_BIN_COUNTS
+    }
     fano_voting = fano_min_error(voting_mi, h_y)
     zoo_results["soft_voting"] = {
         "test_accuracy": voting_acc,
         "test_error": 1.0 - voting_acc,
         "achieved_mi_bits": voting_mi,
+        "achieved_mi_per_bin": voting_per_bin,
         "fano_min_error": fano_voting,
         "fano_max_accuracy": 1.0 - fano_voting,
         "information_efficiency": (1.0 - voting_acc) / fano_voting,
+        "bootstrap_ci": bootstrap_ci_metrics(y_test.values, voting_prob),
     }
+    all_pred["soft_voting"] = voting_pred
     print(
         f"  {'soft_voting':>20s}: acc={voting_acc:.4f}  I(p;Y)={voting_mi:.4f} "
         f"bits  Fano min err={fano_voting:.4f}"
     )
+
+    # ------------------------------------------------------------------
+    # 2b. Pairwise McNemar over all 28 pairs (8 families), Holm-corrected
+    # ------------------------------------------------------------------
+    print("\n--- Pairwise McNemar tests (28 pairs, Holm correction) ---")
+    family_names = [n for n in zoo_results if n != "soft_voting"]
+    mcnemar_summary = pairwise_mcnemar_all(
+        y_test.values,
+        {n: all_pred[n] for n in family_names},
+    )
+    sig_pairs = [
+        pair for pair, res in mcnemar_summary["pairs"].items()
+        if res["significant_after_holm"]
+    ]
+    print(f"  28 pairs tested; significant after Holm correction: "
+          f"{len(sig_pairs)} ({sig_pairs if sig_pairs else 'none'})")
+    min_p = min(res["p_value"] for res in mcnemar_summary["pairs"].values())
+    print(f"  Minimum raw p-value across pairs: {min_p:.4f}")
 
     # ------------------------------------------------------------------
     # 3. Learning curves (saturation evidence)
@@ -356,7 +478,7 @@ def run_ceiling_analysis() -> dict[str, Any]:
 
     lc_sizes, lc_mean, lc_std = learning_curve(_lgbm_factory, X, y)
     for s, m, sd in zip(lc_sizes, lc_mean, lc_std):
-        print(f"  train_size={s:.0%}: acc={m:.4f} ± {sd:.4f}")
+        print(f"  train_size={s:.0%}: acc={m:.4f} +/- {sd:.4f}")
 
     # ------------------------------------------------------------------
     # 4. Persist JSON
@@ -371,6 +493,7 @@ def run_ceiling_analysis() -> dict[str, Any]:
             for pct in (0.5, 0.6, 0.7, 0.8, 0.9, 0.95)
         },
         "model_families": zoo_results,
+        "pairwise_mcnemar": mcnemar_summary,
         "learning_curve": {
             "train_sizes": [float(s) for s in lc_sizes],
             "mean_accuracy": [float(m) for m in lc_mean],

@@ -1,16 +1,22 @@
-"""Pipeline v2: paradigm shift from correlated features to signal extraction.
+"""Pipeline v2: signal extraction with a leakage-free train/val/test protocol.
 
-Key changes from v1:
-1. Feature engineering: PCA + MI selection instead of correlated ratios
-2. Models: Add SVM-RBF, k-NN, MLP (non-linear decision boundaries)
-3. Calibration: Isotonic regression on all probability outputs
-4. Evaluation: Brier score, ECE, log-loss in addition to F1/AUC
-5. Stacking: Calibrated soft voting instead of raw stacking
+Key changes from the original v2 pipeline (all fixes verified against
+the peer-review revision plan):
+
+1. Feature engineering is fitted on the training split ONLY (MI selection
+   + PCA are fit on ``X_train`` and *transformed* on validation/test),
+   eliminating the previous use of test labels in feature selection.
+2. Calibration (isotonic regression) and threshold optimisation are
+   performed on a held-out validation split; the untouched test split is
+   used only for final evaluation, so ECE/Brier/F1 gains are honest
+   out-of-sample quantities.
+3. ROC-AUC is computed with ``roc_auc_score`` (the previous pipeline
+   computed a Pearson correlation by mistake).
+4. All models are deterministic (``n_jobs=1``, fixed seeds).
 """
 
 from __future__ import annotations
 
-import itertools
 import json
 import pathlib
 import sys
@@ -18,36 +24,40 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import RocCurveDisplay, f1_score, log_loss, brier_score_loss
+from sklearn.metrics import (
+    accuracy_score,
+    brier_score_loss,
+    f1_score,
+    log_loss,
+    roc_auc_score,
+)
 from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
 from src.data_loader import load_engineered_dataset
 from src.eda import generate_eda_report
-from src.evaluation import nested_cv_evaluate, optimise_threshold, mcnemar_test, paired_bootstrap_test, bootstrap_ci
-from src.features import engineer_features
-from src.features_v2 import build_signal_features
+from src.evaluation import optimise_threshold
+from src.features_v2 import (
+    build_signal_features,
+    transform_signal_features,
+)
 from src.calibration import (
     calibrate_isotonic,
     assess_calibration,
-    compute_ece,
-    make_calibrated_classifier,
 )
 from src.models import (
     LOGISTIC_REGRESSION, RANDOM_FOREST, XGBOOST, LIGHTGBM,
     make_models, build_pipeline, get_hyperparameter_grids,
     tune_model, predict_estimator, evaluate_model,
-    build_stacking_ensemble, STACKING,
 )
 from src.models_v2 import (
     SVM, KNN, MLP,
     make_nonlinear_models, get_nonlinear_grids,
-    build_voting_ensemble, predict_proba_safe,
+    predict_proba_safe,
 )
 
 SEED: int = 42
+TEST_SIZE: float = 0.2
+VAL_SIZE: float = 0.2
 
 
 def _print_section(title: str) -> None:
@@ -72,48 +82,56 @@ if __name__ == "__main__":
     print(f"Loaded: {X_raw.shape[0]} samples, {X_raw.shape[1]} features (v1 engineered)")
 
     # ------------------------------------------------------------------
-    # 2. Build v2 signal features (PCA + MI selection)
+    # 1b. EDA (descriptive only; no training/test information used here)
     # ------------------------------------------------------------------
-    _print_section("STEP 2: SIGNAL EXTRACTION (v2)")
-
-    X_v2, selection, pca_result = build_signal_features(
-        X_raw, y,
-        mi_threshold=0.01,
-        corr_threshold=0.90,
-        pca_variance=0.95,
-        add_nonlinear=True,
-    )
-    print(f"Selected {len(selection.selected_features)} features by MI")
-    print(f"PCA: {pca_result.n_components} components explain {pca_result.explained_variance_ratio.sum():.1%} variance")
-    print(f"Final feature matrix: {X_v2.shape[1]} features (with non-linear transforms)")
-
-    # ------------------------------------------------------------------
-    # 3. EDA
-    # ------------------------------------------------------------------
-    _print_section("STEP 3: EXPLORATORY DATA ANALYSIS")
-
     eda_dir = pathlib.Path("plots_v2")
     eda_dir.mkdir(exist_ok=True)
     generate_eda_report(X_raw, y, eda_dir)
     print(f"EDA plots saved to {eda_dir}/")
 
     # ------------------------------------------------------------------
-    # 4. Train/test split
+    # 2. Leakage-free train / validation / test split (stratified, seed 42)
     # ------------------------------------------------------------------
-    _print_section("STEP 4: TRAIN / TEST SPLIT")
+    _print_section("STEP 2: TRAIN / VALIDATION / TEST SPLIT")
 
-    splitter = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=SEED)
-    train_idx, test_idx = next(splitter.split(X_v2, y))
-    X_train, X_test = X_v2.iloc[train_idx], X_v2.iloc[test_idx]
-    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    splitter = StratifiedShuffleSplit(n_splits=1, test_size=TEST_SIZE, random_state=SEED)
+    train_val_idx, test_idx = next(splitter.split(X_raw, y))
+    X_train_val, X_test = X_raw.iloc[train_val_idx], X_raw.iloc[test_idx]
+    y_train_val, y_test = y.iloc[train_val_idx], y.iloc[test_idx]
 
-    print(f"Train: {X_train.shape[0]} samples")
-    print(f"Test:  {X_test.shape[0]} samples")
+    val_splitter = StratifiedShuffleSplit(n_splits=1, test_size=VAL_SIZE, random_state=SEED)
+    train_idx, val_idx = next(val_splitter.split(X_train_val, y_train_val))
+    X_train, X_val = X_train_val.iloc[train_idx], X_train_val.iloc[val_idx]
+    y_train, y_val = y_train_val.iloc[train_idx], y_train_val.iloc[val_idx]
+
+    print(f"Train:      {X_train.shape[0]} samples")
+    print(f"Validation: {X_val.shape[0]} samples")
+    print(f"Test:       {X_test.shape[0]} samples")
 
     # ------------------------------------------------------------------
-    # 5. Tune v1 models (LR, RF, XGB, LGBM) on v2 features
+    # 3. Build v2 signal features on TRAINING data only; transform others
     # ------------------------------------------------------------------
-    _print_section("STEP 5: TUNE V1 MODELS ON V2 FEATURES")
+    _print_section("STEP 3: SIGNAL EXTRACTION (v2, train-fitted)")
+
+    X_v2_train, selection, pca_result = build_signal_features(
+        X_train, y_train,
+        mi_threshold=0.01,
+        corr_threshold=0.90,
+        pca_variance=0.95,
+        add_nonlinear=True,
+    )
+    X_v2_val = transform_signal_features(X_val, selection, pca_result, add_nonlinear=True)
+    X_v2_test = transform_signal_features(X_test, selection, pca_result, add_nonlinear=True)
+
+    print(f"Selected {len(selection.selected_features)} features by MI (train-only)")
+    print(f"PCA: {pca_result.n_components} components "
+          f"({pca_result.explained_variance_ratio.sum():.1%} train variance)")
+    print(f"Final feature matrix: {X_v2_train.shape[1]} features")
+
+    # ------------------------------------------------------------------
+    # 4. Tune v1 models (LR, RF, XGB, LGBM) on v2 features
+    # ------------------------------------------------------------------
+    _print_section("STEP 4: TUNE V1 MODELS ON V2 FEATURES")
 
     v1_models = make_models()
     v1_grids = get_hyperparameter_grids()
@@ -124,18 +142,18 @@ if __name__ == "__main__":
 
     for name in v1_names:
         pipeline = build_pipeline(v1_models[name])
-        best = tune_model(name, pipeline, v1_grids[name], X_train, y_train)
+        best = tune_model(name, pipeline, v1_grids[name], X_v2_train, y_train)
         est = best.best_estimator_
         v1_tuned[name] = est
-        y_pred, y_prob = predict_estimator(est, X_test)
-        metrics = evaluate_model(name, est, X_test, y_test, y_pred, y_prob)
+        y_pred, y_prob = predict_estimator(est, X_v2_test)
+        metrics = evaluate_model(name, est, X_v2_test, y_test, y_pred, y_prob)
         v1_results[name] = metrics
         print(f"  {name:>22s}: F1={metrics['f1']:.4f} AUC={metrics['roc_auc']:.4f}")
 
     # ------------------------------------------------------------------
-    # 6. Tune v2 models (SVM, k-NN, MLP)
+    # 5. Tune v2 models (SVM, k-NN, MLP)
     # ------------------------------------------------------------------
-    _print_section("STEP 6: TUNE V2 NON-LINEAR MODELS")
+    _print_section("STEP 5: TUNE V2 NON-LINEAR MODELS")
 
     v2_models = make_nonlinear_models()
     v2_grids = get_nonlinear_grids()
@@ -146,75 +164,109 @@ if __name__ == "__main__":
 
     for name in v2_names:
         pipeline = build_pipeline(v2_models[name])
-        best = tune_model(name, pipeline, v2_grids[name], X_train, y_train)
+        best = tune_model(name, pipeline, v2_grids[name], X_v2_train, y_train)
         est = best.best_estimator_
         v2_tuned[name] = est
-        y_pred, y_prob = predict_estimator(est, X_test)
-        metrics = evaluate_model(name, est, X_test, y_test, y_pred, y_prob)
+        y_pred, y_prob = predict_estimator(est, X_v2_test)
+        metrics = evaluate_model(name, est, X_v2_test, y_test, y_pred, y_prob)
         v2_results[name] = metrics
         print(f"  {name:>22s}: F1={metrics['f1']:.4f} AUC={metrics['roc_auc']:.4f}")
 
     # ------------------------------------------------------------------
-    # 7. Calibrate all models
+    # 6. Calibrate on VALIDATION, evaluate on TEST (honest OOS)
     # ------------------------------------------------------------------
-    _print_section("STEP 7: PROBABILITY CALIBRATION")
+    _print_section("STEP 6: VALIDATION-BASED PROBABILITY CALIBRATION")
 
     all_tuned = {**v1_tuned, **v2_tuned}
     calibration_results = {}
-    calibrated_probas = {}
+    calibrated_probas_test = {}
 
     for name, est in all_tuned.items():
-        y_prob_val = predict_proba_safe(est, X_test)
-        y_prob_cal, _ = calibrate_isotonic(y_test.values, y_prob_val)
-        cal_result = assess_calibration(y_test.values, y_prob_val, y_prob_cal)
+        y_prob_val = predict_proba_safe(est, X_v2_val)
+        _, calibrator = calibrate_isotonic(y_val.values, y_prob_val)
+
+        y_prob_test = predict_proba_safe(est, X_v2_test)
+        y_prob_cal_test = calibrator.predict(y_prob_test)
+
+        cal_result = assess_calibration(y_test.values, y_prob_test, y_prob_cal_test)
         calibration_results[name] = cal_result
-        calibrated_probas[name] = y_prob_cal
+        calibrated_probas_test[name] = y_prob_cal_test
 
         brier_improvement = cal_result.brier_before - cal_result.brier_after
-        print(f"  {name:>22s}: Brier {cal_result.brier_before:.4f} -> {cal_result.brier_after:.4f} (delta={brier_improvement:+.4f})")
+        print(f"  {name:>22s}: Brier {cal_result.brier_before:.4f} -> "
+              f"{cal_result.brier_after:.4f} (delta={brier_improvement:+.4f}) "
+              f"ECE {cal_result.ece_before:.4f} -> {cal_result.ece_after:.4f}")
 
     # ------------------------------------------------------------------
-    # 8. Build calibrated voting ensemble
+    # 7. Calibrated voting ensemble (test-set evaluation)
     # ------------------------------------------------------------------
-    _print_section("STEP 8: CALIBRATED VOTING ENSEMBLE")
+    _print_section("STEP 7: CALIBRATED VOTING ENSEMBLE")
 
-    # Use calibrated probabilities as inputs to a meta-learner
-    # Simple approach: average calibrated probabilities
-    all_probas = np.array([calibrated_probas[name] for name in all_tuned.keys()])
+    all_probas = np.array([calibrated_probas_test[name] for name in all_tuned.keys()])
     ensemble_proba = all_probas.mean(axis=0)
     ensemble_pred = (ensemble_proba >= 0.5).astype(int)
 
     ensemble_metrics = {
-        "accuracy": float((ensemble_pred == y_test.values).mean()),
+        "accuracy": float(accuracy_score(y_test, ensemble_pred)),
         "f1": float(f1_score(y_test, ensemble_pred)),
-        "roc_auc": float(pd.Series(ensemble_proba).corr(y_test.astype(float))),
+        "roc_auc": float(roc_auc_score(y_test, ensemble_proba)),
         "brier": float(brier_score_loss(y_test, ensemble_proba)),
         "logloss": float(log_loss(y_test, np.clip(ensemble_proba, 1e-7, 1 - 1e-7))),
     }
 
-    print(f"  Calibrated Voting: F1={ensemble_metrics['f1']:.4f} Brier={ensemble_metrics['brier']:.4f}")
+    print(f"  Calibrated Voting: F1={ensemble_metrics['f1']:.4f} "
+          f"AUC={ensemble_metrics['roc_auc']:.4f}")
 
     # ------------------------------------------------------------------
-    # 9. Calibration assessment
+    # 8. Threshold optimisation on VALIDATION; evaluate on TEST
     # ------------------------------------------------------------------
-    _print_section("STEP 9: CALIBRATION ASSESSMENT")
+    _print_section("STEP 8: VALIDATION-BASED THRESHOLD OPTIMIZATION")
 
-    print(f"{'Model':>22s} {'Brier_before':>12s} {'Brier_after':>12s} {'ECE_before':>12s} {'ECE_after':>12s}")
-    for name, cal in calibration_results.items():
-        print(f"  {name:>22s}: {cal.brier_before:>12.4f} {cal.brier_after:>12.4f} {cal.ece_before:>12.4f} {cal.ece_after:>12.4f}")
+    all_probas_val = np.array([
+        predict_proba_safe(est, X_v2_val) for est in all_tuned.values()
+    ])
+    ensemble_proba_val = all_probas_val.mean(axis=0)
+
+    thresh_f1 = optimise_threshold(y_val.values, ensemble_proba_val, metric="f1")
+    thresh_acc = optimise_threshold(y_val.values, ensemble_proba_val, metric="accuracy")
+
+    def _eval_at_threshold(probs: np.ndarray, threshold: float) -> dict[str, float]:
+        preds = (probs >= threshold).astype(int)
+        return {
+            "accuracy": float(accuracy_score(y_test, preds)),
+            "f1": float(f1_score(y_test, preds)),
+        }
+
+    oos_f1 = _eval_at_threshold(ensemble_proba, thresh_f1["best_threshold"])
+    oos_acc = _eval_at_threshold(ensemble_proba, thresh_acc["best_threshold"])
+
+    threshold_results = {
+        "f1_optimal": {
+            "threshold": float(thresh_f1["best_threshold"]),
+            "validation_f1": float(thresh_f1["best_score"]),
+            "test_f1": oos_f1["f1"],
+            "test_accuracy": oos_f1["accuracy"],
+        },
+        "accuracy_optimal": {
+            "threshold": float(thresh_acc["best_threshold"]),
+            "validation_accuracy": float(thresh_acc["best_score"]),
+            "test_accuracy": oos_acc["accuracy"],
+            "test_f1": oos_acc["f1"],
+        },
+    }
+    print(f"  F1-optimal threshold: {thresh_f1['best_threshold']:.3f} "
+          f"(val F1={thresh_f1['best_score']:.4f}, test F1={oos_f1['f1']:.4f}, "
+          f"test acc={oos_f1['accuracy']:.4f})")
+    print(f"  Acc-optimal threshold: {thresh_acc['best_threshold']:.3f} "
+          f"(val acc={thresh_acc['best_score']:.4f}, test acc={oos_acc['accuracy']:.4f})")
 
     # ------------------------------------------------------------------
-    # 10. Threshold optimization
+    # 9. Save results
     # ------------------------------------------------------------------
-    _print_section("STEP 10: THRESHOLD OPTIMIZATION")
+    _print_section("STEP 9: SAVING RESULTS")
 
-    thresh_f1 = optimise_threshold(y_test.values, ensemble_proba, metric="f1")
-    print(f"  F1-optimal threshold: {thresh_f1['best_threshold']:.3f} (F1={thresh_f1['best_score']:.4f})")
-
-    # ------------------------------------------------------------------
-    # 11. Save results
-    # ------------------------------------------------------------------
-    _print_section("STEP 11: SAVING RESULTS")
+    eda_dir = pathlib.Path("plots_v2")
+    eda_dir.mkdir(exist_ok=True)
 
     all_results = {**v1_results, **v2_results, "calibrated_voting": ensemble_metrics}
 
@@ -233,13 +285,17 @@ if __name__ == "__main__":
     }
     cal_path.write_text(json.dumps(cal_data, indent=2), encoding="utf-8")
 
+    threshold_path = eda_dir / "threshold_oos.json"
+    threshold_path.write_text(json.dumps(threshold_results, indent=2), encoding="utf-8")
+
     print(f"Results saved to {results_path}")
     print(f"Calibration saved to {cal_path}")
+    print(f"Threshold saved to {threshold_path}")
 
     # ------------------------------------------------------------------
-    # 12. Final summary
+    # 10. Final summary
     # ------------------------------------------------------------------
-    _print_section("FINAL RESULTS (v2 pipeline)")
+    _print_section("FINAL RESULTS (v2 pipeline, leakage-free)")
 
     print(f"{'Model':>22s} {'Accuracy':>10s} {'F1':>10s} {'AUC':>10s} {'Brier':>10s}")
     for name, metrics in sorted(all_results.items(), key=lambda x: x[1].get("f1", 0), reverse=True):

@@ -109,6 +109,10 @@ def build_pipeline(
 def make_models() -> dict[str, ModelEstimator]:
     """Instantiate the base estimators with fixed seeds.
 
+    All estimators are fully deterministic: ``n_jobs=1`` everywhere and
+    ``deterministic=True`` for LightGBM, so repeated runs produce
+    byte-identical outputs (run-to-run reproducibility).
+
     Returns:
         A mapping of model name to an untuned estimator instance.
     """
@@ -116,16 +120,19 @@ def make_models() -> dict[str, ModelEstimator]:
         LOGISTIC_REGRESSION: LogisticRegression(
             max_iter=5000, random_state=SEED
         ),
-        RANDOM_FOREST: RandomForestClassifier(n_jobs=-1, random_state=SEED),
+        RANDOM_FOREST: RandomForestClassifier(
+            n_estimators=500, n_jobs=1, random_state=SEED
+        ),
         XGBOOST: XGBClassifier(
-            n_jobs=-1,
+            n_jobs=1,
             random_state=SEED,
             eval_metric="logloss",
             tree_method="hist",
             verbosity=0,
         ),
         LIGHTGBM: LGBMClassifier(
-            n_jobs=-1,
+            n_jobs=1,
+            deterministic=True,
             random_state=SEED,
             verbose=-1,
             importance_type="gain",
