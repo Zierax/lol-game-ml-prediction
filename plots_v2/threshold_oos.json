@@ -1,0 +1,14 @@
+{
+  "f1_optimal": {
+    "threshold": 0.3530150753768844,
+    "validation_f1": 0.7491785323110625,
+    "test_f1": 0.743058616130454,
+    "test_accuracy": 0.7049595141700404
+  },
+  "accuracy_optimal": {
+    "threshold": 0.43894472361809045,
+    "validation_accuracy": 0.7267552182163188,
+    "test_accuracy": 0.7191295546558705,
+    "test_f1": 0.7417403443462075
+  }
+}

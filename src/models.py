@@ -6,9 +6,8 @@ Evaluation computes Accuracy, Precision, Recall, F1-Score, ROC-AUC, and
 Brier score, and persists ROC curves and confusion matrices into ``plots/``.
 """
 
-from __future__ import annotations
-
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -39,6 +38,11 @@ matplotlib.use("Agg")
 
 SEED: int = 42
 CV_FOLDS: int = 5
+
+# Parallelism for the CV search harness.  Inner estimators are
+# single-threaded and seeded, so parallelising candidate fits does not
+# change results (each fit is independent) — it only reduces wall time.
+SEARCH_JOBS: int = int(os.environ.get("SEARCH_JOBS", "1"))
 
 ModelEstimator = BaseEstimator | ClassifierMixin
 
@@ -186,7 +190,7 @@ def tune_model(
         param_grid=grid,
         scoring="accuracy",
         cv=splitter,
-        n_jobs=1,
+        n_jobs=SEARCH_JOBS,
         verbose=1,
     )
     search.fit(X_train, y_train)
