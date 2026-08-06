@@ -23,12 +23,17 @@ STEPS: list[dict[str, str]] = [
     {"name": "run_ceiling.py",
      "desc": "ceiling analysis (Table 1 zoo, MI spectrum, PCA, learning "
              "curve, 21-pair McNemar)"},
+    {"name": "run_bounds_audit.py",
+     "desc": "score-Bayes ceiling + binning-free (k-NN) achieved-MI "
+             "cross-check (Tables 2 & 3)"},
     {"name": "run_label_noise_audit.py",
      "desc": "label-noise audit (rho in {0,0.05,...,0.20})"},
     {"name": "main_v2.py", "heavy": True,
      "desc": "leakage-free v2 tuning + validation-based threshold/calibration"},
     {"name": "run_temporal_ceiling.py", "heavy": True,
      "desc": "temporal sweep + fixed-cohort + lead-padded controls"},
+    {"name": "run_temporal_accrual.py",
+     "desc": "information-accrual rate (bits/min, minutes-to-85%/90%)"},
     {"name": "main.py", "heavy": True,
      "desc": "legacy v1 pipeline (validation-based threshold, nested CV, "
              "pairwise tests)"},

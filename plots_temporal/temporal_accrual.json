@@ -1,0 +1,34 @@
+{
+  "fit_window_minutes": [
+    10,
+    24
+  ],
+  "mi_slope_bits_per_minute": 0.01734660095357142,
+  "mi_intercept_bits": 0.07110969558928582,
+  "mi_fit_r2": 0.9826179057722022,
+  "fitted_mi_at_m10": 0.24457570512500001,
+  "observed_mi_at_m10": 0.228141905,
+  "target_entropy_bits": 0.9999679708,
+  "minutes_to_error_targets": {
+    "minutes_to_85_pct": 18.39,
+    "minutes_to_90_pct": 26.51
+  },
+  "observed_crossings": {
+    "observed_minutes_to_85_pct": 18.0,
+    "observed_minutes_to_90_pct": null
+  },
+  "first_measured_acc_ge_85_at_minute": null,
+  "observed_acc": {
+    "10": 0.7291,
+    "12": 0.7531,
+    "14": 0.7674,
+    "16": 0.7841,
+    "18": 0.7945,
+    "20": 0.8213,
+    "22": 0.8168,
+    "24": 0.8382,
+    "26": 0.8477,
+    "28": 0.834,
+    "30": 0.8395
+  }
+}

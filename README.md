@@ -35,7 +35,9 @@ speed without changing results).
 | Command | Artifacts produced | Claims it supports |
 |---------|--------------------|--------------------|
 | `python run_ceiling.py` | `plots_ceiling/ceiling_summary.json`, fano_curve.png, mi_spectrum.png, pca_variance.png, learning_curve.png | Table 1 (8-family zoo), MI spectrum, PCA redundancy, learning-curve saturation, 21-pair McNemar (2 significant after Holm), Figure "fano_curve" |
+| `python run_bounds_audit.py` | `plots_ceiling/bounds_audit.json` | Table 2 (score-Bayes ceiling, binning-free $k$-NN achieved MI): every family sits at its score-Bayes ceiling (residual <= 0.3 pts), tightening the Fano claim |
 | `python run_temporal_ceiling.py` | `plots_temporal/temporal_summary.{csv,json}`, temporal_fixed_cohort.{csv,json}, temporal_lead_padded.{csv,json}, temporal_duration_stratified.{csv,json}, temporal_ceiling.png | Temporal rise (72.9% -> 84.0%), fixed-cohort controls, lead-padded control, composition table (minute-10 accuracy by final duration) |
+| `python run_temporal_accrual.py` | `plots_temporal/temporal_accrual.json` | Information-accrual rate (0.017 bits/min, R^2=0.98; minutes-to-85% = 18.4, minutes-to-90% = 26.5) |
 | `python run_label_noise_audit.py` | `plots_ceiling/label_noise_audit.json`, label_noise_sweep.png | Label-noise audit (rho in {0 .. 0.20}); rules out label noise as the cause of the information-poor long-game subset |
 | `python main_v2.py` | `plots_v2/model_metrics_v2.json`, calibration_results.json, threshold_oos.json | Leakage-free (train/val/test) tuning, validation-based threshold optimisation (F1 0.725->0.743), out-of-sample calibration |
 | `python main.py` | `plots/model_metrics.json`, nested_cv_results.json, confidence_intervals.json, threshold_optimisation.json, pairwise_significance.json | Legacy v1 pipeline with validation-based threshold optimisation (no test-set double-dipping) |
