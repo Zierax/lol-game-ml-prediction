@@ -1,92 +1,87 @@
 {
   "per_fold": [
     {
-      "accuracy": 0.7246963562753036,
-      "precision": 0.7214428857715431,
+      "accuracy": 0.729757085020243,
+      "precision": 0.7306122448979592,
+      "recall": 0.7261663286004056,
+      "f1": 0.728382502543235,
+      "roc_auc": 0.8134304505501261
+    },
+    {
+      "accuracy": 0.7282388663967612,
+      "precision": 0.7265388496468214,
       "recall": 0.7302231237322515,
-      "f1": 0.7258064516129032,
-      "roc_auc": 0.8067623496629583
+      "f1": 0.7283763277693475,
+      "roc_auc": 0.8065205810641916
     },
     {
-      "accuracy": 0.7257085020242915,
-      "precision": 0.7341772151898734,
-      "recall": 0.7058823529411765,
-      "f1": 0.7197518097207859,
-      "roc_auc": 0.8010008810211651
+      "accuracy": 0.7378542510121457,
+      "precision": 0.7363636363636363,
+      "recall": 0.7393509127789046,
+      "f1": 0.7378542510121457,
+      "roc_auc": 0.8157590099780769
     },
     {
-      "accuracy": 0.7368421052631579,
-      "precision": 0.7422037422037422,
-      "recall": 0.7241379310344828,
-      "f1": 0.7330595482546202,
-      "roc_auc": 0.8106019628332002
+      "accuracy": 0.7100202429149798,
+      "precision": 0.7126673532440783,
+      "recall": 0.7018255578093306,
+      "f1": 0.7072049054675523,
+      "roc_auc": 0.7900311430737393
     },
     {
-      "accuracy": 0.7019230769230769,
-      "precision": 0.7019328585961343,
-      "recall": 0.6997971602434077,
-      "f1": 0.7008633824276282,
-      "roc_auc": 0.7840145880713831
-    },
-    {
-      "accuracy": 0.7372151898734177,
-      "precision": 0.7346733668341708,
-      "recall": 0.7413793103448276,
-      "f1": 0.7380111055022716,
-      "roc_auc": 0.8199812542429196
+      "accuracy": 0.7483544303797468,
+      "precision": 0.7462235649546828,
+      "recall": 0.7515212981744422,
+      "f1": 0.7488630621526023,
+      "roc_auc": 0.8252522165729721
     }
   ],
   "per_fold_params": [
     {
-      "model__learning_rate": 0.01,
-      "model__max_depth": 5,
-      "model__n_estimators": 500,
-      "model__num_leaves": 31
+      "model__C": 0.01,
+      "model__penalty": "l1",
+      "model__solver": "liblinear"
     },
     {
-      "model__learning_rate": 0.01,
-      "model__max_depth": 5,
-      "model__n_estimators": 500,
-      "model__num_leaves": 63
+      "model__C": 0.01,
+      "model__penalty": "l1",
+      "model__solver": "liblinear"
     },
     {
-      "model__learning_rate": 0.01,
-      "model__max_depth": 5,
-      "model__n_estimators": 300,
-      "model__num_leaves": 63
+      "model__C": 0.1,
+      "model__penalty": "l1",
+      "model__solver": "liblinear"
     },
     {
-      "model__learning_rate": 0.01,
-      "model__max_depth": 5,
-      "model__n_estimators": 300,
-      "model__num_leaves": 31
+      "model__C": 0.01,
+      "model__penalty": "l1",
+      "model__solver": "liblinear"
     },
     {
-      "model__learning_rate": 0.01,
-      "model__max_depth": 5,
-      "model__n_estimators": 300,
-      "model__num_leaves": 31
+      "model__C": 0.1,
+      "model__penalty": "l1",
+      "model__solver": "liblinear"
     }
   ],
   "mean": {
-    "accuracy": 0.7252770460718495,
-    "precision": 0.7268860137190928,
-    "recall": 0.7202839756592292,
-    "f1": 0.7234984595036418,
-    "roc_auc": 0.8044722071663253
+    "accuracy": 0.7308449751447753,
+    "precision": 0.7304811298214355,
+    "recall": 0.729817444219067,
+    "f1": 0.7301362097889765,
+    "roc_auc": 0.8101986802478212
   },
   "std": {
-    "accuracy": 0.01433702463384507,
-    "precision": 0.015817117988114134,
-    "recall": 0.017217499272138764,
-    "f1": 0.014437297517147132,
-    "roc_auc": 0.013359579733793106
+    "accuracy": 0.014118744198605163,
+    "precision": 0.012402797539567263,
+    "recall": 0.018432208394556955,
+    "f1": 0.015348294298391317,
+    "roc_auc": 0.01311705503496549
   },
   "median": {
-    "accuracy": 0.7257085020242915,
-    "precision": 0.7341772151898734,
-    "recall": 0.7241379310344828,
-    "f1": 0.7258064516129032,
-    "roc_auc": 0.8067623496629583
+    "accuracy": 0.729757085020243,
+    "precision": 0.7306122448979592,
+    "recall": 0.7302231237322515,
+    "f1": 0.728382502543235,
+    "roc_auc": 0.8134304505501261
   }
 }

@@ -22,7 +22,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import RocCurveDisplay, f1_score
+from sklearn.metrics import RocCurveDisplay, accuracy_score, f1_score
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from src.data_loader import load_engineered_dataset
@@ -55,6 +55,7 @@ from src.models import (
 )
 
 SEED: int = 42
+VAL_SIZE: float = 0.15
 
 BASE_CLASSIFIERS: list[str] = [
     LOGISTIC_REGRESSION,
@@ -97,9 +98,9 @@ if __name__ == "__main__":
     print(f"EDA plots saved to {eda_dir}/")
 
     # ------------------------------------------------------------------
-    # 3. Stratified train / test split
+    # 3. Stratified train / validation / test split
     # ------------------------------------------------------------------
-    _print_section("STEP 3: TRAIN / TEST SPLIT")
+    _print_section("STEP 3: TRAIN / VALIDATION / TEST SPLIT")
 
     splitter = StratifiedShuffleSplit(
         n_splits=1, test_size=0.2, random_state=SEED
@@ -108,7 +109,18 @@ if __name__ == "__main__":
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
+    # Carve a stratified validation fold out of the training side.  The
+    # validation fold is used ONLY for threshold optimisation (Step 9),
+    # so the test set stays untouched for final evaluation.
+    val_splitter = StratifiedShuffleSplit(
+        n_splits=1, test_size=VAL_SIZE, random_state=SEED
+    )
+    tr_idx, val_idx = next(val_splitter.split(X_train, y_train))
+    X_train, X_val = X_train.iloc[tr_idx], X_train.iloc[val_idx]
+    y_train, y_val = y_train.iloc[tr_idx], y_train.iloc[val_idx]
+
     print(f"Train: {X_train.shape[0]} samples")
+    print(f"Validation: {X_val.shape[0]} samples")
     print(f"Test:  {X_test.shape[0]} samples")
     print(f"Train blue-win rate: {y_train.mean():.4f}")
     print(f"Test  blue-win rate: {y_test.mean():.4f}")
@@ -218,20 +230,28 @@ if __name__ == "__main__":
         )
 
     # ------------------------------------------------------------------
-    # 9. Threshold optimisation for best model
+    # 9. Threshold optimisation for best model (validation-fitted,
+    #    evaluated on the untouched test set)
     # ------------------------------------------------------------------
-    _print_section("STEP 9: DECISION THRESHOLD OPTIMISATION")
+    _print_section("STEP 9: DECISION THRESHOLD OPTIMISATION (VAL-FITTED)")
 
-    thresh_f1 = optimise_threshold(y_test.values, y_prob_best, metric="f1")
-    thresh_acc = optimise_threshold(y_test.values, y_prob_best, metric="accuracy")
+    y_prob_val = predict_estimator(best_est, X_val)[1]
+    thresh_f1 = optimise_threshold(y_val.values, y_prob_val, metric="f1")
+    thresh_acc = optimise_threshold(y_val.values, y_prob_val, metric="accuracy")
     print(f"F1-optimal threshold:   {thresh_f1['best_threshold']:.3f} "
-          f"(F1={thresh_f1['best_score']:.4f})")
+          f"(val F1={thresh_f1['best_score']:.4f})")
     print(f"Acc-optimal threshold:  {thresh_acc['best_threshold']:.3f} "
-          f"(Acc={thresh_acc['best_score']:.4f})")
+          f"(val Acc={thresh_acc['best_score']:.4f})")
 
     y_pred_optimised = (y_prob_best >= thresh_f1["best_threshold"]).astype(int)
     f1_optimised = float(f1_score(y_test, y_pred_optimised))
-    print(f"F1 with optimised threshold: {f1_optimised:.4f}")
+    acc_optimised = float(accuracy_score(y_test, y_pred_optimised))
+    y_pred_acc = (y_prob_best >= thresh_acc["best_threshold"]).astype(int)
+    acc_at_acc_thresh = float(accuracy_score(y_test, y_pred_acc))
+    print(f"Test F1 with val-fitted F1-optimal threshold: {f1_optimised:.4f} "
+          f"(accuracy {acc_optimised:.4f})")
+    print(f"Test accuracy with val-fitted Acc-optimal threshold: "
+          f"{acc_at_acc_thresh:.4f}")
 
     # ------------------------------------------------------------------
     # 10. All-pairs significance tests
