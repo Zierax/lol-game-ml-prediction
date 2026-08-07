@@ -3,13 +3,14 @@
 Steps:
 1. Load and engineer features from data/high_diamond_ranked_10min.csv.
 2. Generate EDA diagnostics and plots.
-3. Split into stratified train / test sets.
+3. Split into stratified train / validation / test sets.
 4. Train and tune four base classifiers + stacking ensemble.
 5. Evaluate on held-out test set with full metrics.
 6. Run true nested CV for unbiased performance estimation.
-7. Perform all-pairs significance tests (McNemar, paired bootstrap).
-8. Optimise decision thresholds.
-9. Persist all results and visualisations.
+7. Perform bootstrap confidence intervals for the best model.
+8. Optimise decision thresholds (validation-fitted).
+9. Perform all-pairs significance tests (McNemar, paired bootstrap).
+10. Persist all results.
 """
 
 from __future__ import annotations
@@ -20,13 +21,10 @@ import pathlib
 import sys
 from typing import Any
 
-import numpy as np
-import pandas as pd
-from sklearn.metrics import RocCurveDisplay, accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from src.data_loader import load_engineered_dataset
-from src.eda import generate_eda_report
 from src.evaluation import (
     bootstrap_ci,
     mcnemar_test,
@@ -34,7 +32,6 @@ from src.evaluation import (
     optimise_threshold,
     paired_bootstrap_test,
 )
-from src.features import engineer_features
 from src.models import (
     LIGHTGBM,
     LOGISTIC_REGRESSION,
@@ -46,8 +43,6 @@ from src.models import (
     evaluate_model,
     get_hyperparameter_grids,
     make_models,
-    plot_confusion_matrix,
-    plot_roc_curves,
     predict_estimator,
     print_metrics_table,
     save_metrics,
@@ -88,19 +83,12 @@ if __name__ == "__main__":
     print(f"Class balance: blueWins mean = {y.mean():.4f}")
 
     # ------------------------------------------------------------------
-    # 2. EDA reports and diagnostics
+    # 2. Stratified train / validation / test split
     # ------------------------------------------------------------------
-    _print_section("STEP 2: EXPLORATORY DATA ANALYSIS")
+    _print_section("STEP 2: TRAIN / VALIDATION / TEST SPLIT")
 
     eda_dir = pathlib.Path("plots")
     eda_dir.mkdir(exist_ok=True)
-    generate_eda_report(X, y, eda_dir)
-    print(f"EDA plots saved to {eda_dir}/")
-
-    # ------------------------------------------------------------------
-    # 3. Stratified train / validation / test split
-    # ------------------------------------------------------------------
-    _print_section("STEP 3: TRAIN / VALIDATION / TEST SPLIT")
 
     splitter = StratifiedShuffleSplit(
         n_splits=1, test_size=0.2, random_state=SEED
@@ -135,7 +123,6 @@ if __name__ == "__main__":
 
     tuned_pipelines: dict[str, Any] = {}
     results: dict[str, dict[str, float]] = {}
-    roc_displays: dict[str, RocCurveDisplay] = {}
 
     for name in BASE_CLASSIFIERS:
         base = models[name]
@@ -152,12 +139,6 @@ if __name__ == "__main__":
         metrics = evaluate_model(name, est, X_test, y_test, y_pred, y_prob)
         results[name] = metrics
 
-        roc_display = RocCurveDisplay.from_estimator(
-            est, X_test, y_test, name=name
-        )
-        roc_displays[name] = roc_display
-        plot_confusion_matrix(name, est, X_test, y_test, eda_dir)
-
     # ------------------------------------------------------------------
     # 5. Build and evaluate stacking ensemble
     # ------------------------------------------------------------------
@@ -173,25 +154,12 @@ if __name__ == "__main__":
     )
     results[STACKING] = metrics_stack
 
-    roc_display_stack = RocCurveDisplay.from_estimator(
-        stacking, X_test, y_test, name=STACKING
-    )
-    roc_displays[STACKING] = roc_display_stack
-    plot_confusion_matrix(STACKING, stacking, X_test, y_test, eda_dir)
-
     print(f"Stacking test metrics: {metrics_stack}")
 
     # ------------------------------------------------------------------
-    # 6. Plot ROC curves
+    # 6. True nested CV for unbiased performance estimation
     # ------------------------------------------------------------------
-    _print_section("STEP 6: ROC CURVES")
-    plot_roc_curves(roc_displays, eda_dir)
-    print(f"ROC curves saved to {eda_dir}/roc_curve.png")
-
-    # ------------------------------------------------------------------
-    # 7. True nested CV for unbiased performance estimation
-    # ------------------------------------------------------------------
-    _print_section("STEP 7: NESTED CROSS-VALIDATION (UNBIASED ESTIMATE)")
+    _print_section("STEP 6: NESTED CROSS-VALIDATION (UNBIASED ESTIMATE)")
 
     best_model_name = max(
         [k for k in results if k != STACKING],
@@ -215,9 +183,9 @@ if __name__ == "__main__":
         print(f"  {metric_name:>10s}: {m:.4f} ± {s:.4f}")
 
     # ------------------------------------------------------------------
-    # 8. Bootstrap confidence intervals for best model
+    # 7. Bootstrap confidence intervals for best model
     # ------------------------------------------------------------------
-    _print_section("STEP 8: BOOTSTRAP CONFIDENCE INTERVALS")
+    _print_section("STEP 7: BOOTSTRAP CONFIDENCE INTERVALS")
 
     best_est = tuned_pipelines.get(overall_best, stacking)
     y_prob_best = predict_estimator(best_est, X_test)[1]
@@ -230,10 +198,10 @@ if __name__ == "__main__":
         )
 
     # ------------------------------------------------------------------
-    # 9. Threshold optimisation for best model (validation-fitted,
+    # 8. Threshold optimisation for best model (validation-fitted,
     #    evaluated on the untouched test set)
     # ------------------------------------------------------------------
-    _print_section("STEP 9: DECISION THRESHOLD OPTIMISATION (VAL-FITTED)")
+    _print_section("STEP 8: DECISION THRESHOLD OPTIMISATION (VAL-FITTED)")
 
     y_prob_val = predict_estimator(best_est, X_val)[1]
     thresh_f1 = optimise_threshold(y_val.values, y_prob_val, metric="f1")
@@ -254,9 +222,9 @@ if __name__ == "__main__":
           f"{acc_at_acc_thresh:.4f}")
 
     # ------------------------------------------------------------------
-    # 10. All-pairs significance tests
+    # 9. All-pairs significance tests
     # ------------------------------------------------------------------
-    _print_section("STEP 10: ALL-PAIRS SIGNIFICANCE TESTS")
+    _print_section("STEP 9: ALL-PAIRS SIGNIFICANCE TESTS")
 
     all_model_names = list(results.keys())
     pairwise_results: list[dict[str, Any]] = []
@@ -294,9 +262,9 @@ if __name__ == "__main__":
               f"McNemar p={mc['p_value']:.4f}{sig_marker}")
 
     # ------------------------------------------------------------------
-    # 11. Save all results
+    # 10. Save all results
     # ------------------------------------------------------------------
-    _print_section("STEP 11: SAVING RESULTS")
+    _print_section("STEP 10: SAVING RESULTS")
 
     metrics_path = save_metrics(results, eda_dir)
 
@@ -330,7 +298,7 @@ if __name__ == "__main__":
     print(f"Pairwise significance saved to {pairwise_path}")
 
     # ------------------------------------------------------------------
-    # 12. Final summary
+    # 11. Final summary
     # ------------------------------------------------------------------
     _print_section("FINAL RESULTS")
     print_metrics_table(results)

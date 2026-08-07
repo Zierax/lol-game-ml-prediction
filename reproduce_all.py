@@ -37,6 +37,8 @@ STEPS: list[dict[str, str]] = [
     {"name": "main.py", "heavy": True,
      "desc": "legacy v1 pipeline (validation-based threshold, nested CV, "
              "pairwise tests)"},
+    {"name": "redraw_plots.py",
+     "desc": "print-ready redraw of the five manuscript figures from JSONs"},
 ]
 
 

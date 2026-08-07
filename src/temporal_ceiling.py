@@ -38,7 +38,6 @@ given frame (no future-frame leakage within a frame's feature set), and
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 

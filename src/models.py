@@ -3,7 +3,7 @@
 Implements four classifiers — Logistic Regression, Random Forest, XGBoost,
 and LightGBM — together with a stacking ensemble that combines all four.
 Evaluation computes Accuracy, Precision, Recall, F1-Score, ROC-AUC, and
-Brier score, and persists ROC curves and confusion matrices into ``plots/``.
+Brier score.
 """
 
 import json
@@ -11,16 +11,12 @@ import os
 from pathlib import Path
 from typing import Any
 
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
-    ConfusionMatrixDisplay,
-    RocCurveDisplay,
     accuracy_score,
     brier_score_loss,
     f1_score,
@@ -33,8 +29,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
-
-matplotlib.use("Agg")
 
 SEED: int = 42
 CV_FOLDS: int = 5
@@ -277,65 +271,6 @@ def evaluate_model(
         "brier": float(brier_score_loss(y_test, y_prob)),
     }
     return metrics
-
-
-# ----------------------------------------------------------------------
-# Visualisation
-# ----------------------------------------------------------------------
-
-
-def plot_roc_curves(
-    roc_curves: dict[str, RocCurveDisplay],
-    output_dir: Path,
-) -> None:
-    """Overlay ROC curves for every model on a single figure.
-
-    Args:
-        roc_curves: Mapping of model name to a fitted ``RocCurveDisplay``.
-        output_dir: Directory in which the PNG is written.
-    """
-    fig, ax = plt.subplots(figsize=(7, 6))
-    for name, display in roc_curves.items():
-        display.plot(ax=ax, name=name)
-    ax.plot([0, 1], [0, 1], "k--", linewidth=0.8, label="Chance")
-    ax.set_xlim(-0.02, 1.02)
-    ax.set_ylim(0.0, 1.02)
-    ax.set_title("Receiver Operating Characteristic Curves by Model")
-    ax.legend(loc="lower right")
-    fig.savefig(output_dir / "roc_curve.png")
-    plt.close(fig)
-
-
-def plot_confusion_matrix(
-    model_name: str,
-    estimator: ModelEstimator,
-    X_test: pd.DataFrame,
-    y_test: pd.Series,
-    output_dir: Path,
-) -> None:
-    """Render and persist the normalised confusion matrix for one model.
-
-    Args:
-        model_name: Model identifier used in the filename.
-        estimator: Fitted estimator.
-        X_test: Test feature matrix.
-        y_test: Ground-truth test target.
-        output_dir: Directory in which the PNG is written.
-    """
-    fig, ax = plt.subplots(figsize=(6, 5))
-    ConfusionMatrixDisplay.from_estimator(
-        estimator,
-        X_test,
-        y_test,
-        normalize="true",
-        cmap="Blues",
-        values_format=".2f",
-        colorbar=False,
-        ax=ax,
-    )
-    ax.set_title(f"Normalised Confusion Matrix — {model_name}")
-    fig.savefig(output_dir / f"confusion_matrix_{model_name}.png")
-    plt.close(fig)
 
 
 # ----------------------------------------------------------------------

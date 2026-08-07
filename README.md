@@ -41,6 +41,7 @@ speed without changing results).
 | `python run_label_noise_audit.py` | `plots_ceiling/label_noise_audit.json`, label_noise_sweep.png | Label-noise audit (rho in {0 .. 0.20}); rules out label noise as the cause of the information-poor long-game subset |
 | `python main_v2.py` | `plots_v2/model_metrics_v2.json`, calibration_results.json, threshold_oos.json | Leakage-free (train/val/test) tuning, validation-based threshold optimisation (F1 0.725->0.743), out-of-sample calibration |
 | `python main.py` | `plots/model_metrics.json`, nested_cv_results.json, confidence_intervals.json, threshold_optimisation.json, pairwise_significance.json | Legacy v1 pipeline with validation-based threshold optimisation (no test-set double-dipping) |
+| `python redraw_plots.py` | `plots_ceiling/fano_curve.png`, mi_spectrum.png, learning_curve.png, pca_variance.png; `plots_temporal/temporal_ceiling.png` | Print-ready (dpi=300) redraw of the five manuscript figures from the committed JSON artifacts (no re-modelling) |
 
 The paper source is `paper/information_ceiling/main.tex` (compiled with
 `pdflatex` + `bibtex`). Figures are loaded from `plots_ceiling/` and
