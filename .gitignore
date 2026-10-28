@@ -53,3 +53,20 @@ paper/entropy_submission/main.pdf
 paper/entropy_submission/supplementary.tex
 paper/entropy_submission/supplementary.pdf
 paper/entropy_submission/Definitions/
+
+# The earlier ICDPN manuscript lives here too and is not part of this public
+# repository.
+paper/main.tex
+paper/main.pdf
+paper/main.aux
+paper/main.bbl
+paper/main.blg
+paper/main.log
+paper/main.out
+paper/cover_letter.tex
+paper/cover_letter.pdf
+paper/cover_letter.aux
+paper/cover_letter.log
+paper/cover_letter.out
+paper/paper.md
+paper/references.bib
