@@ -3,21 +3,100 @@
     10,
     24
   ],
-  "mi_slope_bits_per_minute": 0.01734660095357142,
-  "mi_intercept_bits": 0.07110969558928582,
-  "mi_fit_r2": 0.9826179057722022,
-  "fitted_mi_at_m10": 0.24457570512500001,
-  "observed_mi_at_m10": 0.228141905,
+  "mi_slope_bits_per_minute": 0.017278804547023806,
+  "mi_slope_standard_error": 0.0009496301281035757,
+  "mi_slope_95ci": [
+    0.015417529495940798,
+    0.019140079598106815
+  ],
+  "mi_intercept_bits": 0.06874456466309523,
+  "mi_fit_r2": 0.9821994861957469,
+  "fitted_mi_at_m10": 0.2415326101333333,
+  "observed_mi_at_m10": 0.2249088938,
+  "fit_overshoot_at_m10_bits": 0.016623716333333288,
   "target_entropy_bits": 0.9999679708,
   "minutes_to_error_targets": {
-    "minutes_to_85_pct": 18.39,
-    "minutes_to_90_pct": 26.51
+    "minutes_to_85_pct": 18.6,
+    "minutes_to_90_pct": 26.75
+  },
+  "window_sensitivity": {
+    "table": {
+      "10-20": {
+        "slope_bits_per_minute": 0.019382108364285708,
+        "intercept_bits": 0.04054333715238108,
+        "r2": 0.990982129471576,
+        "minutes_to_85_pct": 18.04,
+        "minutes_to_90_pct": 25.3,
+        "fitted_mi_at_m10": 0.23436442079523817
+      },
+      "10-24": {
+        "slope_bits_per_minute": 0.017278804547023806,
+        "intercept_bits": 0.06874456466309523,
+        "r2": 0.9821994861957469,
+        "minutes_to_85_pct": 18.6,
+        "minutes_to_90_pct": 26.75,
+        "fitted_mi_at_m10": 0.2415326101333333
+      },
+      "10-26": {
+        "slope_bits_per_minute": 0.016651675297499995,
+        "intercept_bits": 0.07794246032277795,
+        "r2": 0.9833138183179052,
+        "minutes_to_85_pct": 18.75,
+        "minutes_to_90_pct": 27.21,
+        "fitted_mi_at_m10": 0.24445921329777792
+      },
+      "10-30": {
+        "slope_bits_per_minute": 0.013566371607272731,
+        "intercept_bits": 0.12583948078181786,
+        "r2": 0.9264842857765556,
+        "minutes_to_85_pct": 19.48,
+        "minutes_to_90_pct": 29.86,
+        "fitted_mi_at_m10": 0.26150319685454515
+      },
+      "12-28": {
+        "slope_bits_per_minute": 0.013146041246666667,
+        "intercept_bits": 0.14125727437777796,
+        "r2": 0.914068745341006,
+        "minutes_to_85_pct": 18.93,
+        "minutes_to_90_pct": 29.65,
+        "fitted_mi_at_m10": 0.27271768684444464
+      }
+    },
+    "slope_range_bits_per_minute": [
+      0.013146041246666667,
+      0.019382108364285708
+    ],
+    "slope_relative_spread_pct": 38.96324295409405,
+    "minutes_to_85_pct_range": [
+      18.04,
+      19.48
+    ],
+    "minutes_to_90_pct_range": [
+      25.3,
+      29.86
+    ]
+  },
+  "saturating_fit": {
+    "form": "I(m) = m_inf * (1 - exp(-k m))",
+    "k": 0.035920191766889,
+    "m_inf_bits": 0.8021840888,
+    "r2": 0.9581962742874547,
+    "m_inf_exceeds_h_y": false,
+    "minutes_to_error_targets": {
+      "minutes_to_85_pct": 18.55,
+      "minutes_to_90_pct": 30.19
+    }
   },
   "observed_crossings": {
     "observed_minutes_to_85_pct": 18.0,
     "observed_minutes_to_90_pct": null
   },
   "first_measured_acc_ge_85_at_minute": null,
+  "caveats": [
+    "The linear fit overshoots the observed MI at minute 10 by 16.6 millibits; the true MI curve is convex and saturating.",
+    "A linear model in m has no cap and eventually exceeds H(Y), which is impossible; the saturating fit is reported for that reason.",
+    "The 90% crossing is an extrapolation and, where the observed value is null, is never reached within the measured range."
+  ],
   "observed_acc": {
     "10": 0.7291,
     "12": 0.7531,

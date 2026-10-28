@@ -1,0 +1,370 @@
+{
+  "beleites2013sample": {
+    "doi": "10.1016/j.aca.2012.12.021",
+    "status": "ok",
+    "title": "Iodine and creatinine testing in urine dried on filter paper",
+    "authors": [
+      "Theodore T. Zava",
+      "Sonia Kapur",
+      "David T. Zava"
+    ],
+    "container": "Analytica Chimica Acta",
+    "year": 2013,
+    "volume": "764",
+    "issue": null,
+    "page": "64-69",
+    "type": "journal-article"
+  },
+  "birant2022multi": {
+    "doi": "10.3390/e25010028",
+    "status": "ok",
+    "title": "Multi-Objective Multi-Instance Learning: A New Approach to Machine Learning for eSports",
+    "authors": [
+      "Kokten Ulas Birant",
+      "Derya Birant"
+    ],
+    "container": "Entropy",
+    "year": 2022,
+    "volume": "25",
+    "issue": "1",
+    "page": "28",
+    "type": "journal-article"
+  },
+  "breiman2001random": {
+    "doi": "10.1023/A:1010933404324",
+    "status": "ok",
+    "title": "Random Forests",
+    "authors": [
+      "Leo Breiman"
+    ],
+    "container": "Machine Learning",
+    "year": 2001,
+    "volume": "45",
+    "issue": "1",
+    "page": "5-32",
+    "type": "journal-article"
+  },
+  "chen2016xgboost": {
+    "doi": "10.1145/2939672.2939785",
+    "status": "ok",
+    "title": "XGBoost",
+    "authors": [
+      "Tianqi Chen",
+      "Carlos Guestrin"
+    ],
+    "container": "Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining",
+    "year": 2016,
+    "volume": null,
+    "issue": null,
+    "page": "785-794",
+    "type": "proceedings-article"
+  },
+  "codeRepo2026": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "cordova2024predicting": {
+    "doi": "10.1109/ICOCO62848.2024.10928259",
+    "status": "ok",
+    "title": "Predicting League of Legends Match Outcomes Through Machine Learning Models Using Past Match Player Performance",
+    "authors": [
+      "Chaim Joseph A. Cordova",
+      "Carl Victor A. Villaceran",
+      "Christine F. Peña"
+    ],
+    "container": "2024 IEEE International Conference on Computing (ICOCO)",
+    "year": 2024,
+    "volume": null,
+    "issue": null,
+    "page": "522-527",
+    "type": "proceedings-article"
+  },
+  "cover2006information": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "do2021champion": {
+    "doi": "10.1145/3472538.3472579",
+    "status": "ok",
+    "title": "Using Machine Learning to Predict Game Outcomes Based on Player-Champion Experience in League of Legends",
+    "authors": [
+      "Tiffany D. Do",
+      "Seong Ioi Wang",
+      "Dylan S. Yu",
+      "Matthew G. McMillian",
+      "Ryan P. McMahan"
+    ],
+    "container": "The 16th International Conference on the Foundations of Digital Games (FDG) 2021",
+    "year": 2021,
+    "volume": null,
+    "issue": null,
+    "page": "1-5",
+    "type": "proceedings-article"
+  },
+  "fagerland2013mcnemar": {
+    "doi": "10.1186/1471-2288-13-91",
+    "status": "ok",
+    "title": "The McNemar test for binary matched-pairs data: mid-p and asymptotic are better than exact conditional",
+    "authors": [
+      "Morten W Fagerland",
+      "Stian Lydersen",
+      "Petter Laake"
+    ],
+    "container": "BMC Medical Research Methodology",
+    "year": 2013,
+    "volume": "13",
+    "issue": "1",
+    "page": null,
+    "type": "journal-article"
+  },
+  "fano1961transmission": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "feder1994relations": {
+    "doi": "10.1109/18.272494",
+    "status": "ok",
+    "title": "Relations between entropy and error probability",
+    "authors": [
+      "M. Feder",
+      "N. Merhav"
+    ],
+    "container": "IEEE Transactions on Information Theory",
+    "year": 1994,
+    "volume": "40",
+    "issue": "1",
+    "page": "259-266",
+    "type": "journal-article"
+  },
+  "fukunaga1989estimation": {
+    "doi": "10.1109/34.588",
+    "status": "http-404"
+  },
+  "gneiting2007strictly": {
+    "doi": "10.1198/016214506000001437",
+    "status": "ok",
+    "title": "Strictly Proper Scoring Rules, Prediction, and Estimation",
+    "authors": [
+      "Tilmann Gneiting",
+      "Adrian E Raftery"
+    ],
+    "container": "Journal of the American Statistical Association",
+    "year": 2007,
+    "volume": "102",
+    "issue": "477",
+    "page": "359-378",
+    "type": "journal-article"
+  },
+  "hellman1970probability": {
+    "doi": "10.1109/TIT.1970.1054466",
+    "status": "ok",
+    "title": "Probability of error, equivocation, and the Chernoff bound",
+    "authors": [
+      "M. Hellman",
+      "J. Raviv"
+    ],
+    "container": "IEEE Transactions on Information Theory",
+    "year": 1970,
+    "volume": "16",
+    "issue": "4",
+    "page": "368-372",
+    "type": "journal-article"
+  },
+  "hitar2023tog": {
+    "doi": "10.1109/TG.2022.3153086",
+    "status": "ok",
+    "title": "Machine Learning Methods for Predicting <i>League of Legends</i> Game Outcome",
+    "authors": [
+      "Juan Agustín Hitar-García",
+      "Laura Morán-Fernández",
+      "Verónica Bolón-Canedo"
+    ],
+    "container": "IEEE Transactions on Games",
+    "year": 2023,
+    "volume": "15",
+    "issue": "2",
+    "page": "171-181",
+    "type": "journal-article"
+  },
+  "hodges2017win": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "hojaji2025deep": {
+    "doi": "10.1016/j.chbr.2025.100718",
+    "status": "ok",
+    "title": "Deep learning techniques for identifying KPIs in League of Legends: Win prediction, map navigation, and vision control",
+    "authors": [
+      "Fazilat Hojaji",
+      "Robert E. McIlroy",
+      "Antoine Dupuy",
+      "Gianpaolo Pedroni",
+      "Adam J. Toth",
+      "Mark J. Campbell"
+    ],
+    "container": "Computers in Human Behavior Reports",
+    "year": 2025,
+    "volume": "19",
+    "issue": null,
+    "page": "100718",
+    "type": "journal-article"
+  },
+  "holmes2019estimation": {
+    "doi": "10.1103/PhysRevE.100.022404",
+    "status": "ok",
+    "title": "Estimation of mutual information for real-valued data with error bars and controlled bias",
+    "authors": [
+      "Caroline M. Holmes",
+      "Ilya Nemenman"
+    ],
+    "container": "Physical Review E",
+    "year": 2019,
+    "volume": "100",
+    "issue": "2",
+    "page": null,
+    "type": "journal-article"
+  },
+  "junior2023lol": {
+    "doi": "10.48550/arXiv.2309.02449",
+    "status": "http-404"
+  },
+  "kaggle2015lol": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "kaggle2021sololq": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "ke2017lightgbm": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "kinkade2022dota": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "kraskov2004estimating": {
+    "doi": "10.1103/PhysRevE.69.061138",
+    "status": "http-404"
+  },
+  "laurel2023multiple": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "lydersen2009recommended": {
+    "doi": "10.1002/sim.3380",
+    "status": "ok",
+    "title": "A random change point model for assessing variability in repeated measures of cognitive function",
+    "authors": [
+      "Annica Dominicus",
+      "Samuli Ripatti",
+      "Nancy L. Pedersen",
+      "Juni Palmgren"
+    ],
+    "container": "Statistics in Medicine",
+    "year": 2008,
+    "volume": "27",
+    "issue": "27",
+    "page": "5786-5798",
+    "type": "journal-article"
+  },
+  "miller1954": {
+    "doi": "10.1214/aoms/1177729509",
+    "status": "http-404"
+  },
+  "moracantallops2018moba": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "natarajan2013symmetric": {
+    "doi": "10.1007/s10994-012-9561-4",
+    "status": "http-404"
+  },
+  "nemenman2002entropy": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "omar2024finding": {
+    "doi": "10.1109/AIMS61812.2024.10512909",
+    "status": "ok",
+    "title": "Finding Feature Importance in Optimized Classification Model: League of Legends Ranked Matches",
+    "authors": [
+      "Haziq Ibrahim Omar",
+      "Matheus Prayogo",
+      "Vimalakirti Muliawan",
+      "Alexander Agung Santoso Gunawan",
+      "Karli Eka Setiawan"
+    ],
+    "container": "2024 IEEE International Conference on Artificial Intelligence and Mechatronics Systems (AIMS)",
+    "year": 2024,
+    "volume": null,
+    "issue": null,
+    "page": "1-5",
+    "type": "proceedings-article"
+  },
+  "paninski2003estimation": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "pedregosa2011scikit": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "perlich2003tree": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "ross2014mutual": {
+    "doi": "10.1371/journal.pone.0087357",
+    "status": "ok",
+    "title": "Mutual Information between Discrete and Continuous Data Sets",
+    "authors": [
+      "Brian C. Ross"
+    ],
+    "container": "PLoS ONE",
+    "year": 2014,
+    "volume": "9",
+    "issue": "2",
+    "page": "e87357",
+    "type": "journal-article"
+  },
+  "semenov2017dota": {
+    "doi": "10.1007/978-3-319-52920-2_3",
+    "status": "ok",
+    "title": "Performance of Machine Learning Algorithms in Predicting Game Outcome from Drafts in Dota 2",
+    "authors": [
+      "Aleksandr Semenov",
+      "Peter Romov",
+      "Sergey Korolev",
+      "Daniil Yashkov",
+      "Kirill Neklyudov"
+    ],
+    "container": "Communications in Computer and Information Science",
+    "year": 2017,
+    "volume": null,
+    "issue": null,
+    "page": "26-37",
+    "type": "book-chapter"
+  },
+  "shalev2014understanding": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "silva2018continuous": {
+    "doi": null,
+    "status": "no-doi"
+  },
+  "viering2023shape": {
+    "doi": "10.1109/TPAMI.2022.3187726",
+    "status": "http-404"
+  },
+  "wilathgamuwa2024kills": {
+    "doi": "10.1109/ICITR64471.2024.10857792",
+    "status": "http-404"
+  },
+  "yang2014combat": {
+    "doi": null,
+    "status": "no-doi"
+  }
+}

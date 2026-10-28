@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 EPSILON: float = 1e-8
 
@@ -184,7 +186,26 @@ def engineer_features(X: pd.DataFrame) -> pd.DataFrame:
     df["goldDiffSquared"] = df["blueGoldDiff"] ** 2
     df["expDiffSquared"] = df["blueExperienceDiff"] ** 2
 
-    # Composite advantage score — weighted combination
+    # Composite advantage score.
+    #
+    # IMPORTANT (disclosure, 2026-09-30 audit): the four weights below are
+    # FIXED A PRIORI and were never tuned against the outcome.  They were
+    # chosen to put the four differentials on comparable scales (gold and
+    # experience are O(1000) while kills and levels are O(1-5)), and the
+    # sign-times-square-root compression is applied to the two large-scale
+    # quantities to limit their dominance of the linear sum.  The complete
+    # definition is
+    #
+    #     compositeAdvantage = 0.3 * sign(dGold) * sqrt(|dGold|)
+    #                       + 0.3 * sign(dExp)  * sqrt(|dExp|)
+    #                       + 0.2 * dKills
+    #                       + 0.2 * dLevel
+    #
+    # Note that this feature is a deterministic function of four columns that
+    # are already in the matrix, so its rank-1 mutual information is
+    # expected rather than discovered: mutual information is invariant under
+    # monotone reparameterisation, so the composite cannot add information
+    # beyond its inputs.  See features_audit() for the rank correlation.
     df["compositeAdvantage"] = (
         0.3 * np.sign(df["blueGoldDiff"]) * np.sqrt(np.abs(df["blueGoldDiff"]))
         + 0.3
@@ -206,11 +227,14 @@ def engineer_features(X: pd.DataFrame) -> pd.DataFrame:
     )
     df["towerKillRatioDiff"] = df["blueTowerKillRatio"] - df["redTowerKillRatio"]
 
-    # Gold per minute differential (already in data, but we add the difference)
-    df["goldPerMinDiff"] = df["blueGoldPerMin"] - df["redGoldPerMin"]
-
-    # CS per minute differential
-    df["csPerMinDiff"] = df["blueCSPerMin"] - df["redCSPerMin"]
+    # NOTE (2026-09-30 audit): goldPerMinDiff and csPerMinDiff were removed.
+    # They are EXACT rescalings of already-present columns: because the
+    # snapshot is taken at a fixed 10 minutes, blueGoldPerMin ==
+    # blueTotalGold/10 and blueCSPerMin == blueTotalMinionsKilled/10 hold to
+    # machine precision, so goldPerMinDiff == blueGoldDiff/10 and
+    # csPerMinDiff == minionDiff/10 exactly. They contributed zero
+    # information while adding exact linear dependencies to the design
+    # matrix. See features_audit() for the rank diagnostic.
 
     # Jungle control — blue jungle minions / total jungle minions
     total_jungle = (
@@ -241,3 +265,67 @@ def engineer_features(X: pd.DataFrame) -> pd.DataFrame:
     df = df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
     return df
+
+
+ENGINEERED_DIFFERENTIALS: tuple[str, ...] = (
+    "killDiff", "deathDiff", "assistDiff", "wardPlacedDiff",
+    "wardDestroyedDiff", "eliteMonsterDiff", "dragonDiff", "heraldDiff",
+    "towerDiff", "minionDiff", "jungleMinionDiff", "levelDiff",
+)
+
+#: Exact (machine-precision) linear dependencies retained only for audit.
+EXACT_DEPENDENCIES: tuple[tuple[str, str, str], ...] = (
+    ("blueGoldDiff", "blueTotalGold", "blueGoldDiff == blueTotalGold - redTotalGold"),
+    ("blueExperienceDiff", "blueTotalExperience",
+     "blueExperienceDiff == blueTotalExperience - redTotalExperience"),
+    ("blueGoldPerMin", "blueTotalGold", "blueGoldPerMin == blueTotalGold / 10"),
+    ("blueCSPerMin", "blueTotalMinionsKilled",
+     "blueCSPerMin == blueTotalMinionsKilled / 10"),
+)
+
+
+def features_audit(X_raw: pd.DataFrame, X_eng: pd.DataFrame) -> dict:
+    """Audit the engineered design matrix for rank deficiency and collinearity.
+
+    Reports the numerical rank of the standardised matrix (so readers can see
+    how many columns are exactly dependent) and the rank correlation of the
+    top mutual-information features, which quantifies how much of the
+    "informative" set is a single latent signal re-expressed.
+
+    Args:
+        X_raw: The cleaned 35-column raw matrix.
+        X_eng: The engineered 85-column matrix returned by
+            :func:`engineer_features`.
+
+    Returns:
+        Dictionary with ``n_columns``, ``numerical_rank``, ``rank_deficiency``,
+        the per-threshold component counts, and the Spearman correlation
+        matrix of the top features.
+    """
+    from scipy.stats import spearmanr
+
+    scaled = StandardScaler().fit_transform(X_eng)
+    rank = int(np.linalg.matrix_rank(scaled))
+    pca = PCA(random_state=42).fit(scaled)
+    cum = np.cumsum(pca.explained_variance_ratio_)
+
+    n_cols = int(X_eng.shape[1])
+    top_cols = [c for c in ("compositeAdvantage", "blueGoldDiff", "goldShare",
+                            "blueExperienceDiff", "killDiff", "levelDiff")
+                if c in X_eng.columns]
+    corr = spearmanr(X_eng[top_cols].to_numpy()).statistic
+
+    return {
+        "n_raw_columns": int(X_raw.shape[1]),
+        "n_columns": n_cols,
+        "numerical_rank": rank,
+        "rank_deficiency": n_cols - rank,
+        "pca_components_for_variance": {
+            f"{int(p * 100)}%": int(np.searchsorted(cum, p) + 1)
+            for p in (0.5, 0.8, 0.9, 0.95, 0.99)
+        },
+        "spearman_top_features": {
+            "columns": top_cols,
+            "matrix": np.round(np.asarray(corr), 4).tolist(),
+        },
+    }

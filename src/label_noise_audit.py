@@ -1,20 +1,24 @@
-"""Label-noise robustness audit (peer-review revision plan, experiment C4).
+"""Label-noise robustness audit.
 
-The devil's-advocate review showed that a ~15% symmetric label-flip noise
-model reproduces every headline number of the ceiling analysis (accuracy
-~0.72, achieved MI ~0.24 bits, saturating learning curves).  This module
-quantifies how much label noise the reported signature tolerates:
+Design note (2026-09-30 revision)
+---------------------------------
+An earlier version of this audit corrupted the **held-out test labels only**
+while keeping the fitted model frozen.  That experiment is an algebraic
+identity, not a measurement: flipping a fraction ``rho`` of the labels of a
+frozen prediction vector maps accuracy by
 
-* On the primary dataset's fixed test split, we flip a fraction ``rho``
-  of test labels, refit three representative families (LR, LGBM, soft
-  voting) on the *clean* training split, and recompute accuracy and
-  achieved MI under the corrupted labels.
-* We report the (rho, accuracy) and (rho, MI) curves plus the noise level
-  at which the clean-data signature (acc ~0.72, MI ~0.24) is reproduced.
-* On the temporal corpus we additionally report the minute-10 plateau for
-  games lasting >= 25 and >= 30 minutes (short-game contamination check).
+    acc(rho) = rho + (1 - 2 rho) acc(0),
 
-All randomness is seeded (SEED = 42) for reproducibility.
+independently of the model, the dataset, or the score distribution.  It
+therefore carries **no** information about label quality and cannot
+discriminate any hypothesis about noise.
+
+The only informative design is to corrupt the **training** labels and refit,
+so that the learned score itself changes, and then to measure the accuracy and
+the achieved mutual information against the *clean* test labels.  That is what
+this module does.  A secondary held-out-only sweep is retained, but reported
+explicitly as the degenerate identity it is, so that the difference between
+the two designs is visible rather than hidden.
 """
 
 from __future__ import annotations
@@ -26,33 +30,26 @@ from typing import Any
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import stats
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import StratifiedShuffleSplit
 from lightgbm import LGBMClassifier
 
-from src.ceiling_analysis import (
-    achieved_mi_robust,
-    empirical_entropy,
-    fano_min_error,
-)
-from src.data_loader import load_engineered_dataset
-from src.models import build_pipeline
-from src.models_v2 import predict_proba_safe
-from src.temporal_ceiling import DURATION_MS_PER_MIN, load_temporal_data
+from src.ceiling_analysis import achieved_mi_robust, fano_min_error
+from src.zoo import fit_and_score, load_master_split
 
 matplotlib.use("Agg")
 
 SEED: int = 42
 TEST_SIZE: float = 0.2
-NOISE_LEVELS: tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20)
+NOISE_LEVELS: tuple[float, ...] = (0.0, 0.05, 0.10, 0.15, 0.20, 0.30)
 N_REPEATS: int = 3
 
-OUTPUT_DIR: Path = Path("plots_ceiling")
+OUTPUT_DIR = Path("plots_ceiling")
 
 
 def _flip_labels(y: np.ndarray, rho: float, seed: int) -> np.ndarray:
-    """Symmetrically flip a fraction rho of the labels (seeded)."""
+    """Symmetrically flip a fraction ``rho`` of the labels (seeded)."""
     rng = np.random.RandomState(seed)
     flip = rng.random(len(y)) < rho
     y_noisy = y.copy()
@@ -60,127 +57,164 @@ def _flip_labels(y: np.ndarray, rho: float, seed: int) -> np.ndarray:
     return y_noisy
 
 
-def run_label_noise_audit() -> dict[str, Any]:
-    """Run the label-noise sweep and persist JSON + figure."""
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    X, y = load_engineered_dataset()
-    y_arr = y.values
-    splitter = StratifiedShuffleSplit(
-        n_splits=1, test_size=TEST_SIZE, random_state=SEED
-    )
-    train_idx, test_idx = next(splitter.split(X, y_arr))
-    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
-    y_train, y_test = y_arr[train_idx], y_arr[test_idx]
-
-    # Fixed models: LR (deterministic), LGBM (deterministic), soft voting.
-    lr = build_pipeline(LogisticRegression(max_iter=5000, random_state=SEED))
-    lgbm = build_pipeline(
-        LGBMClassifier(
-            n_jobs=1, deterministic=True, random_state=SEED, verbose=-1
+def _new_families() -> dict[str, Any]:
+    """Fresh, seeded instances of the two deterministic families."""
+    return {
+        "logistic_regression": build_pipeline(
+            LogisticRegression(max_iter=5000, random_state=SEED)
         ),
-        scale=False,
-    )
-
-    results: dict[str, Any] = {
-        "clean": {},
-        "noise_sweep": {},
-        "duration_restricted": {},
-    }
-    for name, est in (("logistic_regression", lr), ("lightgbm", lgbm)):
-        est.fit(X_train, y_train)
-        y_prob_clean = predict_proba_safe(est, X_test)
-        acc_clean = float(accuracy_score(y_test, (y_prob_clean >= 0.5).astype(int)))
-        mi_clean = achieved_mi_robust(y_prob_clean, y_test)
-        results["clean"][name] = {
-            "test_accuracy": acc_clean,
-            "achieved_mi_bits": mi_clean,
-        }
-
-    # Soft voting over both families.
-    lr.fit(X_train, y_train)
-    lgbm.fit(X_train, y_train)
-    voting_prob = np.mean(
-        np.column_stack([
-            predict_proba_safe(lr, X_test),
-            predict_proba_safe(lgbm, X_test),
-        ]),
-        axis=1,
-    )
-    results["clean"]["soft_voting"] = {
-        "test_accuracy": float(accuracy_score(
-            y_test, (voting_prob >= 0.5).astype(int))),
-        "achieved_mi_bits": achieved_mi_robust(voting_prob, y_test),
-    }
-
-    # Noise sweep: corrupt TEST labels only (training stays clean), so the
-    # signature collapse is attributable to label noise alone.
-    for rho in NOISE_LEVELS:
-        row: dict[str, Any] = {"rho": rho}
-        for name, est in (
-            ("logistic_regression", lr),
-            ("soft_voting", None),
-        ):
-            accs: list[float] = []
-            mis: list[float] = []
-            for r in range(N_REPEATS):
-                y_test_noisy = _flip_labels(y_test, rho, SEED + r)
-                if name == "soft_voting":
-                    y_prob = voting_prob
-                else:
-                    y_prob = predict_proba_safe(est, X_test)
-                accs.append(float(accuracy_score(
-                    y_test_noisy, (y_prob >= 0.5).astype(int))))
-                mis.append(achieved_mi_robust(y_prob, y_test_noisy))
-            row[name] = {
-                "mean_accuracy": float(np.mean(accs)),
-                "std_accuracy": float(np.std(accs)),
-                "mean_achieved_mi": float(np.mean(mis)),
-                "std_achieved_mi": float(np.std(mis)),
-            }
-        results["noise_sweep"][str(rho)] = row
-        print(
-            f"  rho={rho:.2f}: soft-vote acc={row['soft_voting']['mean_accuracy']:.4f} "
-            f"MI={row['soft_voting']['mean_achieved_mi']:.4f}"
-        )
-
-    # Duration-restricted minute-10 plateau on the temporal corpus.
-    df = load_temporal_data()
-    frame10 = df[df["frame"] == 10]
-    for min_dur in (25, 30):
-        sub = frame10[frame10["gameDuration"] >= min_dur * DURATION_MS_PER_MIN]
-        if len(sub) < 100:
-            continue
-        feature_cols = [c for c in sub.columns if c not in
-                        ("gameId", "gameDuration", "frame", "hasWon")]
-        X10 = sub[feature_cols]
-        y10 = sub["hasWon"].astype(int).values
-        h_y10 = empirical_entropy(y10)
-        splitter10 = StratifiedShuffleSplit(
-            n_splits=1, test_size=TEST_SIZE, random_state=SEED
-        )
-        tr_idx, te_idx = next(splitter10.split(X10, y10))
-        est = build_pipeline(
+        "lightgbm": build_pipeline(
             LGBMClassifier(
                 n_jobs=1, deterministic=True, random_state=SEED, verbose=-1
             ),
             scale=False,
-        )
-        est.fit(X10.iloc[tr_idx], y10[tr_idx])
-        y_prob = predict_proba_safe(est, X10.iloc[te_idx])
-        y_test_ = y10[te_idx]
-        acc = float(accuracy_score(y_test_, (y_prob >= 0.5).astype(int)))
-        mi = achieved_mi_robust(y_prob, y_test_)
-        results["duration_restricted"][f"minute10_duration_ge_{min_dur}"] = {
-            "n_samples": int(len(sub)),
-            "win_rate": float(y10.mean()),
-            "target_entropy_bits": h_y10,
-            "test_accuracy": acc,
-            "achieved_mi_bits": mi,
-            "fano_max_accuracy": 1.0 - fano_min_error(mi, h_y10),
+        ),
+    }
+
+
+def run_label_noise_audit() -> dict[str, Any]:
+    """Run the label-noise sweep and persist JSON + figure."""
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    FAMILIES = ("logistic_regression", "lightgbm", "soft_voting")
+
+    master = load_master_split()
+    y_test = master["y_test"]
+    X_train = master["X_train"]
+    y_train = master["y_train"]
+
+    results: dict[str, Any] = {
+        "design": {
+            "primary": (
+                "training-label corruption with refit, calibration fold and "
+                "test labels left clean"
+            ),
+            "secondary": (
+                "test-label corruption with a frozen model (algebraic "
+                "identity; reported for contrast only)"
+            ),
+            "noise_levels": list(NOISE_LEVELS),
+            "n_repeats": N_REPEATS,
+            "seed": SEED,
+            "source": "src.zoo.load_master_split / fit_and_score",
+        },
+        "clean": {},
+        "noise_sweep": {},
+        "degenerate_test_only_sweep": {},
+    }
+
+    # ------------------------------------------------------------------
+    # Clean reference, from the shared fit (identical to Table 1)
+    # ------------------------------------------------------------------
+    scored = fit_and_score(master)
+    for name in FAMILIES:
+        p = scored["probs"][name]
+        results["clean"][name] = {
+            "test_accuracy": scored["acc"][name],
+            "achieved_mi_bits": achieved_mi_robust(p, y_test),
         }
-        print(f"  minute-10, duration >= {min_dur} min (n={len(sub)}): "
-              f"acc={acc:.4f} MI={mi:.4f}")
+    print("Clean reference (same fit as Table 1):")
+    for name, r in results["clean"].items():
+        print(f"  {name:>22s}: acc={r['test_accuracy']:.4f} "
+              f"MI={r['achieved_mi_bits']:.4f}")
+
+    # ------------------------------------------------------------------
+    # Primary design: corrupt TRAINING labels, refit, score CLEAN test
+    # ------------------------------------------------------------------
+    print("\nTraining-label noise (refit; calibration fold and test clean):")
+    FAMILIES = ("logistic_regression", "lightgbm", "soft_voting")
+
+    for rho in NOISE_LEVELS:
+        row: dict[str, Any] = {"rho": rho}
+        acc_by: dict[str, list[float]] = {n: [] for n in FAMILIES}
+        mi_by: dict[str, list[float]] = {n: [] for n in FAMILIES}
+        for r in range(N_REPEATS):
+            y_train_noisy = _flip_labels(y_train, rho, SEED + 100 * r)
+            fit_labels = y_train_noisy[master["fit_rel"]]
+            s = fit_and_score(master, fit_labels=fit_labels)
+            for name in acc_by:
+                acc_by[name].append(s["acc"][name])
+                mi_by[name].append(
+                    achieved_mi_robust(s["probs"][name], y_test)
+                )
+        for name in acc_by:
+            row[name] = {
+                "mean_accuracy": float(np.mean(acc_by[name])),
+                "std_accuracy": float(np.std(acc_by[name], ddof=1)),
+                "se_accuracy": float(
+                    np.std(acc_by[name], ddof=1) / np.sqrt(len(acc_by[name]))
+                ),
+                "mean_achieved_mi": float(np.mean(mi_by[name])),
+                "std_achieved_mi": float(np.std(mi_by[name], ddof=1)),
+            }
+        results["noise_sweep"][str(rho)] = row
+        print(f"  rho={rho:.2f}: " + "  ".join(
+            f"{n} acc={row[n]['mean_accuracy']:.4f} "
+            f"MI={row[n]['mean_achieved_mi']:.4f}"
+            for n in ("logistic_regression", "lightgbm", "soft_voting")))
+
+    # Per-family degradation at the highest noise level.  The confidence
+    # intervals use the exact t-critical value for N_REPEATS - 1 degrees of
+    # freedom (here df = 2, crit ~= 4.30), not the normal approximation.
+    results["degradation_at_rho_max"] = {}
+    rho_max = str(max(NOISE_LEVELS))
+    crit_t = float(stats.t.ppf(0.975, N_REPEATS - 1))
+    for name in results["clean"]:
+        clean = results["clean"][name]
+        noisy = results["noise_sweep"][rho_max][name]
+        se = np.sqrt(
+            results["noise_sweep"][rho_max][name]["se_accuracy"] ** 2
+            + results["noise_sweep"]["0.0"][name]["se_accuracy"] ** 2
+        )
+        drop = 100 * (clean["test_accuracy"] - noisy["mean_accuracy"])
+        results["degradation_at_rho_max"][name] = {
+            "rho": max(NOISE_LEVELS),
+            "accuracy_drop_points": float(drop),
+            "accuracy_drop_ci_lower": float(drop - crit_t * se * 100.0),
+            "accuracy_drop_ci_upper": float(drop + crit_t * se * 100.0),
+            "mi_drop_percent": float(
+                100 * (clean["achieved_mi_bits"] - noisy["mean_achieved_mi"])
+                / clean["achieved_mi_bits"]
+            ),
+        }
+    print(f"\nDegradation at rho = {max(NOISE_LEVELS)}:")
+    for name, d in results["degradation_at_rho_max"].items():
+        sig = "SIGNIFICANT" if d["accuracy_drop_ci_lower"] > 0 else "n.s."
+        print(f"  {name:>22s}: drops {d['accuracy_drop_points']:.2f} pts "
+              f"[{d['accuracy_drop_ci_lower']:.2f}, {d['accuracy_drop_ci_upper']:.2f}] "
+              f"({sig}); MI -{d['mi_drop_percent']:.1f}%")
+
+    # ------------------------------------------------------------------
+    # Secondary (degenerate) design, reported for contrast
+    # ------------------------------------------------------------------
+    voting_clean = scored["probs"]["soft_voting"]
+    print("\nTest-label-only noise with a frozen model (degenerate identity):")
+    for rho in NOISE_LEVELS:
+        accs, mis = [], []
+        for r in range(N_REPEATS):
+            y_noisy = _flip_labels(y_test, rho, SEED + r)
+            accs.append(float(
+                accuracy_score(y_noisy, (voting_clean >= 0.5).astype(int))
+            ))
+            mis.append(achieved_mi_robust(voting_clean, y_noisy))
+        identity = rho + (1 - 2 * rho) * results["clean"]["soft_voting"]["test_accuracy"]
+        results["degenerate_test_only_sweep"][str(rho)] = {
+            "rho": rho,
+            "mean_accuracy": float(np.mean(accs)),
+            "algebraic_identity_prediction": float(identity),
+            "mean_achieved_mi": float(np.mean(mis)),
+            "note": "acc(rho) = rho + (1-2rho) acc(0) holds for ANY frozen score",
+        }
+        print(f"  rho={rho:.2f}: acc={np.mean(accs):.4f} "
+              f"identity={identity:.4f} (residual {np.mean(accs)-identity:+.5f})")
+
+    # ------------------------------------------------------------------
+    # NOTE: duration-restricted minute-10 information is NOT recomputed
+    # here. It is produced by the canonical temporal pipeline
+    # (run_temporal_ceiling.py -> plots_temporal/
+    # temporal_duration_stratified.json) and is cited in the paper from
+    # there. Duplicating the fit here would risk a second, divergent
+    # implementation of the same stratified quantity.
 
     json_path = OUTPUT_DIR / "label_noise_audit.json"
     json_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
@@ -190,34 +224,69 @@ def run_label_noise_audit() -> dict[str, Any]:
 
 
 def _plot_noise_sweep(results: dict[str, Any]) -> None:
-    sweep = results["noise_sweep"]
-    rhos = [float(k) for k in sweep]
-    acc = [sweep[str(r)]["soft_voting"]["mean_accuracy"] for r in rhos]
-    mi = [sweep[str(r)]["soft_voting"]["mean_achieved_mi"] for r in rhos]
+    BLUE, ORANGE, GREEN, BLACK, GRAY = ("#4C72B0", "#DD8452", "#55A868",
+                                        "#333333", "#888888")
+    rhos = [float(k) for k in results["noise_sweep"]]
+    clean_acc = results["clean"]["soft_voting"]["test_accuracy"]
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.6))
+    clean_acc = results["clean"]["soft_voting"]["test_accuracy"]
+    clean_mi = results["clean"]["soft_voting"]["achieved_mi_bits"]
+    families = ("logistic_regression", "lightgbm", "soft_voting")
+    colors = {"logistic_regression": BLUE, "lightgbm": ORANGE,
+              "soft_voting": GREEN}
+
     ax = axes[0]
-    ax.plot(rhos, acc, "o-", color="#4C72B0", linewidth=2)
-    ax.axhline(results["clean"]["soft_voting"]["test_accuracy"],
-               color="#C44E52", linestyle=":", label="Clean labels")
-    ax.set_xlabel("Label-flip rate rho")
-    ax.set_ylabel("Soft-voting accuracy (noisy labels)")
-    ax.set_title("Accuracy vs test-label noise")
-    ax.legend(loc="best", fontsize=8)
-    ax.grid(alpha=0.3)
+    for name in families:
+        ax.plot(rhos,
+                [results["noise_sweep"][str(r)][name]["mean_accuracy"]
+                 for r in rhos], "o-", color=colors[name], lw=2, ms=4,
+                label=name.replace("_", " "))
+    ax.plot(
+        rhos,
+        [results["degenerate_test_only_sweep"][str(r)]["mean_accuracy"]
+         for r in rhos],
+        "k--", linewidth=1.8,
+        label="frozen model, test-label noise (identity)",
+    )
+    ax.axhline(clean_acc, color=GRAY, ls=":", lw=1.2)
+    ax.set_xlabel("Training-label flip rate $\\rho$")
+    ax.set_ylabel("Accuracy on clean test labels")
+    ax.set_title("Robustness to training-label noise, by family")
+    ax.legend(loc="lower left", fontsize=7)
 
     ax = axes[1]
-    ax.plot(rhos, mi, "o-", color="#4C72B0", linewidth=2)
-    ax.axhline(results["clean"]["soft_voting"]["achieved_mi_bits"],
-               color="#C44E52", linestyle=":", label="Clean labels")
-    ax.set_xlabel("Label-flip rate rho")
-    ax.set_ylabel("Achieved MI (bits, noisy labels)")
-    ax.set_title("Achieved MI vs test-label noise")
-    ax.legend(loc="best", fontsize=8)
-    ax.grid(alpha=0.3)
+    for name in families:
+        base = results["clean"][name]["achieved_mi_bits"]
+        vals = [100 * (base - results["noise_sweep"][str(r)][name]["mean_achieved_mi"])
+                / base for r in rhos]
+        ax.plot(rhos, vals, "o-", color=colors[name], lw=2, ms=4,
+                label=name.replace("_", " "))
+    ax.set_xlabel("Training-label flip rate $\\rho$")
+    ax.set_ylabel("Achieved information lost (%)")
+    ax.set_title("Information loss under training-label noise")
+    ax.legend(loc="upper left", fontsize=7)
+
+    ax = axes[2]
+    deg = results["degradation_at_rho_max"]
+    names = list(deg)
+    drops = [deg[n]["accuracy_drop_points"] for n in names]
+    los = [deg[n]["accuracy_drop_ci_lower"] for n in names]
+    his = [deg[n]["accuracy_drop_ci_upper"] for n in names]
+    x = np.arange(len(names))
+    ax.bar(x, drops, 0.5, color=ORANGE)
+    ax.errorbar(x, drops, yerr=[np.array(drops) - np.array(los),
+                                np.array(his) - np.array(drops)],
+                fmt="none", ecolor=BLACK, capsize=4, lw=1.2)
+    ax.set_xticks(x)
+    ax.set_xticklabels([n.replace("_", "\n") for n in names], fontsize=8)
+    ax.set_ylabel("Accuracy drop (points)")
+    ax.set_title(f"Degradation at $\\rho = {max(NOISE_LEVELS)}$ "
+                 f"(95% CI)")
+    ax.axhline(0, color=BLACK, lw=0.8)
 
     fig.tight_layout()
-    fig.savefig(OUTPUT_DIR / "label_noise_sweep.png", dpi=150)
+    fig.savefig(OUTPUT_DIR / "label_noise_sweep.png", dpi=300)
     plt.close(fig)
 
 

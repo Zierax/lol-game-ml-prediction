@@ -194,19 +194,35 @@ def mcnemar_test(
     y_true: np.ndarray,
     y_pred_a: np.ndarray,
     y_pred_b: np.ndarray,
+    method: str = "exact",
 ) -> dict[str, Any]:
     """McNemar's test for paired classification outcomes.
 
     Tests the null hypothesis that both classifiers have the same
-    error rate.  Uses the continuity-corrected chi-squared variant.
+    error rate.
+
+    Three variants are provided:
+
+    * ``"exact"`` (default) --- the exact binomial test on the discordant
+      pairs, ``2 * BinomCDF(min(n01, n10); n01+n10, 0.5)``.  This is the
+      recommended default for paired binary data because the chi-square
+      approximation is unreliable in the sparse-cell regime
+      \\ (Fagerland, Lydersen and Laake, *BMC Med. Res. Methodol.* **2013**,
+      *13*, 219).
+    * ``"chi2"`` --- the uncorrected Pearson chi-square statistic.
+    * ``"chi2_cc"`` --- the continuity-corrected chi-square.  Retained only
+      for sensitivity analysis; it should not be used when the discordant
+      count is large, where it needlessly costs power.
 
     Args:
         y_true: Ground-truth labels.
         y_pred_a: Hard predictions from model A.
         y_pred_b: Hard predictions from model B.
+        method: One of ``"exact"``, ``"chi2"``, ``"chi2_cc"``.
 
     Returns:
-        Dictionary with ``chi2``, ``p_value``, and ``significant``.
+        Dictionary with ``chi2``, ``p_value``, ``n01``, ``n10``, ``method``,
+        and ``significant``.
     """
     # Contingency table:
     #          B correct  B wrong
@@ -217,24 +233,93 @@ def mcnemar_test(
 
     n01 = int(np.sum(correct_a & ~correct_b))
     n10 = int(np.sum(~correct_a & correct_b))
+    n_discordant = n01 + n10
 
-    # Continuity-corrected McNemar
-    numerator = abs(n01 - n10) - 1
-    denominator = n01 + n10
-    if denominator == 0:
-        chi2 = 0.0
-        p_value = 1.0
+    if method == "exact":
+        # Exact binomial: P(X <= min(n01,n10)) under Binom(n01+n10, 0.5).
+        # Doubling the lower tail is valid because the distribution is
+        # symmetric about n/2, so the two tails are equal.
+        if n_discordant == 0:
+            p_value = 1.0
+        else:
+            k = min(n01, n10)
+            p_value = float(min(1.0, 2.0 * stats.binom.cdf(k, n_discordant, 0.5)))
+        chi2 = 0.0 if n_discordant == 0 else float((n01 - n10) ** 2 / n_discordant)
+    elif method in ("chi2", "chi2_cc"):
+        if n_discordant == 0:
+            chi2 = 0.0
+        elif method == "chi2_cc":
+            # The correction term must not make the numerator negative:
+            # when |n01 - n10| <= 1 the corrected statistic is 0 by
+            # convention, not 1/n.
+            numerator = max(0.0, abs(n01 - n10) - 1.0)
+            chi2 = float(numerator ** 2 / n_discordant)
+        else:
+            chi2 = float((n01 - n10) ** 2 / n_discordant)
+        # chi2.sf (the survival function) is numerically stable; computing
+        # 1 - cdf loses all precision once the CDF approaches one.
+        p_value = float(stats.chi2.sf(chi2, df=1))
     else:
-        chi2 = (numerator ** 2) / denominator
-        p_value = 1.0 - stats.chi2.cdf(chi2, df=1)
+        raise ValueError(f"unknown method: {method!r}")
 
     return {
         "chi2": float(chi2),
         "p_value": float(p_value),
         "n01": n01,
         "n10": n10,
-        "significant": p_value < 0.05,
+        "n_discordant": n_discordant,
+        "method": method,
+        "significant": bool(p_value < 0.05),
     }
+
+
+def minimum_detectable_difference(
+    n_test: int,
+    n_discordant: int,
+    alpha: float = 0.05,
+    power: float = 0.80,
+) -> float:
+    """Minimum detectable accuracy difference for a paired binary test.
+
+    For McNemar's test the discriminating statistic is the imbalance
+    between the two discordant counts, whose variance under the paired
+    design is ``m / n`` with ``m = n01 + n10``.  Setting the detectable
+    difference ``d`` equal to the standard error of that imbalance scaled
+    by the normal deviate required for two-sided level ``alpha`` at power
+    ``1 - beta``, i.e. solving ``d = z' sqrt(m / (n (n + z'^2)))`` for
+    ``z' = z_{1-alpha/2} + z_{power}``, gives
+
+    .. math::
+
+        d = \\left(z_{1-\\alpha/2} + z_{\\text{power}}\\right)
+            \\sqrt{\\frac{m}{n\\left(n + \\left(z_{1-\\alpha/2} +
+            z_{\\text{power}}\\right)^2\\right)}} .
+
+    Note the power term is part of ``z'``, not folded into the radicand.
+
+    Reporting this quantity is essential: without it, "no significant
+    difference" is indistinguishable from "insufficient power to detect a
+    difference that might exist".
+
+    Args:
+        n_test: Number of paired test observations.
+        n_discordant: Observed discordant count ``m = n01 + n10``.
+        alpha: **Per-comparison** two-sided significance level. This is
+            not a family-wise level: when decisions are Holm-corrected
+            across many pairs, the effective per-pair level is larger
+            than ``alpha`` and the caller must pass that larger value (or
+            recompute) to get a matching MDE.
+        power: Target power (``1 - beta``).
+
+    Returns:
+        The minimum detectable difference in accuracy (same units as
+        accuracy, i.e. a fraction), or ``nan`` if ``n_test`` is zero.
+    """
+    if n_test <= 0:
+        return float("nan")
+    z = float(stats.norm.ppf(1.0 - alpha / 2.0) + stats.norm.ppf(power))
+    m = float(n_discordant)
+    return float(z * np.sqrt(m / (n_test * (n_test + z ** 2))))
 
 
 # ----------------------------------------------------------------------

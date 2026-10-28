@@ -3,21 +3,21 @@
     "n_samples":7209.0,
     "win_rate":0.5261478707,
     "voting_accuracy":0.9112343967,
-    "voting_achieved_mi":0.6920251124,
-    "voting_fano_max_accuracy":0.9453085257
+    "voting_achieved_mi":0.6808530634,
+    "voting_fano_max_accuracy":0.9425660578
   },
   "24-29 min":{
     "n_samples":9021.0,
     "win_rate":0.5000554262,
     "voting_accuracy":0.735734072,
-    "voting_achieved_mi":0.2288374539,
-    "voting_fano_max_accuracy":0.7738932347
+    "voting_achieved_mi":0.2199121938,
+    "voting_fano_max_accuracy":0.7688054904
   },
   ">=30 min":{
     "n_samples":8682.0,
     "win_rate":0.4877908316,
     "voting_accuracy":0.5578583765,
-    "voting_achieved_mi":0.018987587,
-    "voting_fano_max_accuracy":0.5818500326
+    "voting_achieved_mi":0.0126199059,
+    "voting_fano_max_accuracy":0.5671502122
   }
 }

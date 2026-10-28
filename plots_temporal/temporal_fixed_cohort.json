@@ -6,9 +6,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.5277088503,
-    "voting_achieved_mi":0.0105990242,
-    "voting_fano_max_accuracy":0.5633886468,
-    "voting_information_efficiency":1.0817198094
+    "voting_achieved_mi":0.0014504204,
+    "voting_fano_max_accuracy":0.5292881921,
+    "voting_information_efficiency":1.0033552203
   },
   {
     "min_duration_min":32,
@@ -17,9 +17,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.5467328371,
-    "voting_achieved_mi":0.019282447,
-    "voting_fano_max_accuracy":0.5836977319,
-    "voting_information_efficiency":1.0887934025
+    "voting_achieved_mi":0.0107304913,
+    "voting_fano_max_accuracy":0.563745094,
+    "voting_information_efficiency":1.0389961389
   },
   {
     "min_duration_min":32,
@@ -28,9 +28,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.5359801489,
-    "voting_achieved_mi":0.0228775142,
-    "voting_fano_max_accuracy":0.5907661746,
-    "voting_information_efficiency":1.1338746268
+    "voting_achieved_mi":0.013331145,
+    "voting_fano_max_accuracy":0.5704223458,
+    "voting_information_efficiency":1.0801768821
   },
   {
     "min_duration_min":32,
@@ -39,9 +39,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.5500413565,
-    "voting_achieved_mi":0.0283144802,
-    "voting_fano_max_accuracy":0.6004964643,
-    "voting_information_efficiency":1.1262945215
+    "voting_achieved_mi":0.0191658764,
+    "voting_fano_max_accuracy":0.5834583079,
+    "voting_information_efficiency":1.0802247458
   },
   {
     "min_duration_min":32,
@@ -50,9 +50,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.5897435897,
-    "voting_achieved_mi":0.0322748424,
-    "voting_fano_max_accuracy":0.607014686,
-    "voting_information_efficiency":1.0439484522
+    "voting_achieved_mi":0.0219329424,
+    "voting_fano_max_accuracy":0.5889645493,
+    "voting_information_efficiency":0.9981046881
   },
   {
     "min_duration_min":32,
@@ -61,9 +61,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.5889164599,
-    "voting_achieved_mi":0.0413821356,
-    "voting_fano_max_accuracy":0.6206357345,
-    "voting_information_efficiency":1.0836116563
+    "voting_achieved_mi":0.031438001,
+    "voting_fano_max_accuracy":0.6056718663,
+    "voting_information_efficiency":1.0424910245
   },
   {
     "min_duration_min":32,
@@ -72,9 +72,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.5922249793,
-    "voting_achieved_mi":0.047512179,
-    "voting_fano_max_accuracy":0.6289672823,
-    "voting_information_efficiency":1.099027124
+    "voting_achieved_mi":0.0363747483,
+    "voting_fano_max_accuracy":0.6133566693,
+    "voting_information_efficiency":1.0546542208
   },
   {
     "min_duration_min":32,
@@ -83,9 +83,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.6195202647,
-    "voting_achieved_mi":0.0661245609,
-    "voting_fano_max_accuracy":0.6513580394,
-    "voting_information_efficiency":1.0913194002
+    "voting_achieved_mi":0.0541915994,
+    "voting_fano_max_accuracy":0.6374465875,
+    "voting_information_efficiency":1.0494446396
   },
   {
     "min_duration_min":32,
@@ -94,9 +94,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.6517783292,
-    "voting_achieved_mi":0.1241443965,
-    "voting_fano_max_accuracy":0.7052093316,
-    "voting_information_efficiency":1.1812506571
+    "voting_achieved_mi":0.1120125523,
+    "voting_fano_max_accuracy":0.6952992611,
+    "voting_information_efficiency":1.142831724
   },
   {
     "min_duration_min":32,
@@ -105,9 +105,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.6898263027,
-    "voting_achieved_mi":0.1820196156,
-    "voting_fano_max_accuracy":0.7463871467,
-    "voting_information_efficiency":1.2230204159
+    "voting_achieved_mi":0.1690922407,
+    "voting_fano_max_accuracy":0.7379114614,
+    "voting_information_efficiency":1.1834691395
   },
   {
     "min_duration_min":32,
@@ -116,9 +116,9 @@
     "win_rate":0.4811445584,
     "target_entropy_bits":0.9989739207,
     "voting_accuracy":0.7510339123,
-    "voting_achieved_mi":0.2820358524,
-    "voting_fano_max_accuracy":0.8024810935,
-    "voting_information_efficiency":1.260467122
+    "voting_achieved_mi":0.2689095948,
+    "voting_fano_max_accuracy":0.7958940745,
+    "voting_information_efficiency":1.2197886322
   },
   {
     "min_duration_min":36,
@@ -127,9 +127,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.5172413793,
-    "voting_achieved_mi":0.0148614198,
-    "voting_fano_max_accuracy":0.5732713171,
-    "voting_information_efficiency":1.1313010819
+    "voting_achieved_mi":-0.005623094,
+    "voting_fano_max_accuracy":0.5,
+    "voting_information_efficiency":0.9655172414
   },
   {
     "min_duration_min":36,
@@ -138,9 +138,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.4847870183,
-    "voting_achieved_mi":0.0154676092,
-    "voting_fano_max_accuracy":0.5746808744,
-    "voting_information_efficiency":1.2113562518
+    "voting_achieved_mi":-0.003553725,
+    "voting_fano_max_accuracy":0.5,
+    "voting_information_efficiency":1.0304259635
   },
   {
     "min_duration_min":36,
@@ -149,9 +149,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.5314401623,
-    "voting_achieved_mi":0.0317043856,
-    "voting_fano_max_accuracy":0.6055515703,
-    "voting_information_efficiency":1.1878861783
+    "voting_achieved_mi":0.0112198718,
+    "voting_fano_max_accuracy":0.5641454745,
+    "voting_information_efficiency":1.0750372208
   },
   {
     "min_duration_min":36,
@@ -160,9 +160,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.537525355,
-    "voting_achieved_mi":0.0320885489,
-    "voting_fano_max_accuracy":0.6061709049,
-    "voting_information_efficiency":1.1743028911
+    "voting_achieved_mi":0.0101408555,
+    "voting_fano_max_accuracy":0.5611772058,
+    "voting_information_efficiency":1.0538984098
   },
   {
     "min_duration_min":36,
@@ -171,9 +171,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.5253549696,
-    "voting_achieved_mi":0.03009694,
-    "voting_fano_max_accuracy":0.6029184304,
-    "voting_information_efficiency":1.1953338226
+    "voting_achieved_mi":0.0081492467,
+    "voting_fano_max_accuracy":0.5552770408,
+    "voting_information_efficiency":1.0672824972
   },
   {
     "min_duration_min":36,
@@ -182,9 +182,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.5395537525,
-    "voting_achieved_mi":0.0260851962,
-    "voting_fano_max_accuracy":0.596022926,
-    "voting_information_efficiency":1.1397831141
+    "voting_achieved_mi":0.0041375029,
+    "voting_fano_max_accuracy":0.5408604746,
+    "voting_information_efficiency":1.002846024
   },
   {
     "min_duration_min":36,
@@ -193,9 +193,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.5395537525,
-    "voting_achieved_mi":0.0244874814,
-    "voting_fano_max_accuracy":0.5931308023,
-    "voting_information_efficiency":1.1316812628
+    "voting_achieved_mi":0.0010766086,
+    "voting_fano_max_accuracy":0.5247056257,
+    "voting_information_efficiency":0.9687601461
   },
   {
     "min_duration_min":36,
@@ -204,9 +204,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.5415821501,
-    "voting_achieved_mi":0.0353718104,
-    "voting_fano_max_accuracy":0.6113192187,
-    "voting_information_efficiency":1.1794199044
+    "voting_achieved_mi":0.0109854845,
+    "voting_fano_max_accuracy":0.5635126181,
+    "voting_information_efficiency":1.0502430743
   },
   {
     "min_duration_min":36,
@@ -215,9 +215,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.5578093306,
-    "voting_achieved_mi":0.0369112789,
-    "voting_fano_max_accuracy":0.6136502561,
-    "voting_information_efficiency":1.1445346512
+    "voting_achieved_mi":0.0139881326,
+    "voting_fano_max_accuracy":0.5711909076,
+    "voting_information_efficiency":1.0312063742
   },
   {
     "min_duration_min":36,
@@ -226,9 +226,9 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.6125760649,
-    "voting_achieved_mi":0.0602588256,
-    "voting_fano_max_accuracy":0.6442999527,
-    "voting_information_efficiency":1.0891871904
+    "voting_achieved_mi":0.0353847732,
+    "voting_fano_max_accuracy":0.6113390577,
+    "voting_information_efficiency":0.9968172588
   },
   {
     "min_duration_min":36,
@@ -237,8 +237,8 @@
     "win_rate":0.4845904298,
     "target_entropy_bits":0.9993147416,
     "voting_accuracy":0.6105476673,
-    "voting_achieved_mi":0.084206779,
-    "voting_fano_max_accuracy":0.6698221652,
-    "voting_information_efficiency":1.1795229467
+    "voting_achieved_mi":0.0583572736,
+    "voting_fano_max_accuracy":0.6420629294,
+    "voting_information_efficiency":1.0880469353
   }
 ]

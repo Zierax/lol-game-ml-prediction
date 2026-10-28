@@ -1,32 +1,121 @@
 {
   "n_samples": 9879,
-  "n_features": 87,
+  "n_features": 85,
+  "n_raw_features": 35,
+  "n_engineered_features": 50,
   "target_entropy_bits": 0.9999973317529247,
+  "target_entropy_bits_test": 0.9999970440918016,
+  "seed": 42,
+  "design_matrix_audit": {
+    "n_raw_columns": 35,
+    "n_columns": 85,
+    "numerical_rank": 54,
+    "rank_deficiency": 31,
+    "pca_components_for_variance": {
+      "50%": 4,
+      "80%": 11,
+      "90%": 17,
+      "95%": 22,
+      "99%": 32
+    },
+    "spearman_top_features": {
+      "columns": [
+        "compositeAdvantage",
+        "blueGoldDiff",
+        "goldShare",
+        "blueExperienceDiff",
+        "killDiff",
+        "levelDiff"
+      ],
+      "matrix": [
+        [
+          1.0,
+          0.9741,
+          0.974,
+          0.964,
+          0.9002,
+          0.8807
+        ],
+        [
+          0.9741,
+          1.0,
+          0.9995,
+          0.8837,
+          0.9166,
+          0.8145
+        ],
+        [
+          0.974,
+          0.9995,
+          1.0,
+          0.8839,
+          0.916,
+          0.8145
+        ],
+        [
+          0.964,
+          0.8837,
+          0.8839,
+          1.0,
+          0.813,
+          0.9053
+        ],
+        [
+          0.9002,
+          0.9166,
+          0.916,
+          0.813,
+          1.0,
+          0.7521
+        ],
+        [
+          0.8807,
+          0.8145,
+          0.8145,
+          0.9053,
+          0.7521,
+          1.0
+        ]
+      ]
+    }
+  },
+  "mi_permutation_null": {
+    "n_permutations": 200,
+    "n_features": 85,
+    "null_max_mean": 0.016120826144837452,
+    "null_max_std": 0.002953932541929827,
+    "null_max_95th_pct": 0.021215851323443176,
+    "null_max_observed": 0.027231177373144594,
+    "observed_max": 0.2364589382017779,
+    "observed_over_null95_ratio": 11.145390048076674,
+    "p_value_maxT": 0.004975124378109453,
+    "p_is_lower_bound": true
+  },
   "top_features_mi": {
-    "compositeAdvantage": 0.16320115630144816,
-    "goldPerMinDiff": 0.15683488462283401,
-    "goldShare": 0.15569097014075162,
-    "blueGoldDiff": 0.15531012471788141,
-    "experienceShare": 0.13675437166299753,
-    "blueExperienceDiff": 0.1365035787173925,
-    "blueKDR": 0.13492768434730884,
-    "killDiff": 0.1314055458659369,
-    "redKDR": 0.13092156101089936,
-    "killParticipationDiff": 0.12867330445548264,
-    "kdrDiff": 0.1274763871991067,
-    "deathDiff": 0.12661901796606623,
-    "kdaDiff": 0.1256451662824256,
-    "redKDA": 0.12109931311962674,
-    "blueKDA": 0.11877002861161223,
-    "blueKillParticipation": 0.11693473833251833,
-    "redKillParticipation": 0.11659667053596667,
-    "levelDiff": 0.11541463254348461,
-    "blueGoldPerMin": 0.0959045816547599,
-    "blueTotalGold": 0.09502244445182884
+    "compositeAdvantage": 0.2364589382017779,
+    "goldShare": 0.22373670885250985,
+    "blueGoldDiff": 0.22223622739218443,
+    "blueExperienceDiff": 0.20275788079896795,
+    "deathDiff": 0.19517544454925262,
+    "experienceShare": 0.1951183723302351,
+    "blueKDR": 0.18809898291509433,
+    "kdaDiff": 0.18574921782360673,
+    "killDiff": 0.18471557541475467,
+    "redKDR": 0.18404243884396299,
+    "killParticipationDiff": 0.1830624651568042,
+    "kdrDiff": 0.1828573603634868,
+    "blueKDA": 0.18244410426276544,
+    "redKillParticipation": 0.17937032757590085,
+    "levelDiff": 0.1757612005835757,
+    "blueKillParticipation": 0.16864551139393472,
+    "redKDA": 0.1682985821134486,
+    "blueTotalGold": 0.1424869083684045,
+    "blueGoldPerMin": 0.14019385119310673,
+    "redGoldPerMin": 0.1359316190520469
   },
   "pca_variance_points": {
     "0.5": 4,
-    "0.6": 5,
+    "0.6": 6,
     "0.7": 8,
     "0.8": 11,
     "0.9": 17,
@@ -34,375 +123,860 @@
   },
   "model_families": {
     "logistic_regression": {
-      "test_accuracy": 0.7176113360323887,
-      "test_error": 0.2823886639676113,
-      "achieved_mi_bits": 0.23854316175401247,
+      "test_accuracy": 0.7206477732793523,
+      "test_error": 0.27935222672064774,
+      "roc_auc": 0.8043912758415803,
+      "achieved_mi_bits": 0.22824913097138136,
+      "achieved_mi_bits_uncorrected": 0.23530684962620255,
+      "achieved_mi_bits_knn": 0.24338628472449492,
+      "miller_madow_bias_bits": -0.007057718654821188,
       "achieved_mi_per_bin": {
-        "10": 0.22826421623284754,
-        "20": 0.24005340833763628,
-        "40": 0.24731186069155356
+        "10": 0.2305425175056109,
+        "20": 0.2364495160611104,
+        "40": 0.2389285153118864
       },
-      "fano_min_error": 0.2207057942031411,
-      "fano_max_accuracy": 0.7792942057968589,
-      "information_efficiency": 1.27948006524784,
+      "fano_min_error": 0.22643678315279656,
+      "fano_max_accuracy": 0.7735632168472034,
+      "fano_max_accuracy_from_plugin_mi": 0.7775088822613897,
+      "information_efficiency": 1.2336874903056034,
+      "information_efficiency_from_plugin_mi": 1.2555657482418678,
       "bootstrap_ci": {
         "accuracy": {
-          "ci_lower": 0.6983805668016194,
-          "ci_upper": 0.7373481781376519
+          "ci_lower": 0.7004048582995951,
+          "ci_upper": 0.7398785425101214
         },
         "achieved_mi": {
-          "ci_lower": 0.21692489037387774,
-          "ci_upper": 0.2762412501301561
+          "ci_lower": 0.20495064371152288,
+          "ci_upper": 0.2647660981794419
         },
         "fano_max_accuracy": {
-          "ci_lower": 0.7990842622950924,
-          "ci_upper": 0.7670769404429889
+          "ci_lower": 0.7599963186914133,
+          "ci_upper": 0.7932466163341484
         }
-      }
+      },
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.7160931174089069,
+        "plug_in_score_bayes_ceiling": 0.7226720647773279,
+        "accuracy_at_0.5": 0.7206477732793523,
+        "crossfit_minus_accuracy": -0.0045546558704453455,
+        "crossfit_minus_accuracy_ci_lower": -0.012651821862348256,
+        "crossfit_minus_accuracy_ci_upper": 0.004048582995951344,
+        "plug_in_optimism": 0.006578947368421018,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
     },
     "random_forest": {
-      "test_accuracy": 0.7130566801619433,
-      "test_error": 0.28694331983805665,
-      "achieved_mi_bits": 0.22811026563874007,
+      "test_accuracy": 0.7140688259109311,
+      "test_error": 0.2859311740890689,
+      "roc_auc": 0.7924831479091113,
+      "achieved_mi_bits": 0.21532456320728935,
+      "achieved_mi_bits_uncorrected": 0.22031364018742158,
+      "achieved_mi_bits_knn": 0.20035728831525207,
+      "miller_madow_bias_bits": -0.004989076980132234,
       "achieved_mi_per_bin": {
-        "10": 0.22168120886211376,
-        "20": 0.2264792658563033,
-        "40": 0.23617032219780323
+        "10": 0.2157542144828437,
+        "20": 0.2224686813826593,
+        "40": 0.22271802469676172
       },
-      "fano_min_error": 0.226515308052293,
-      "fano_max_accuracy": 0.773484691947707,
-      "information_efficiency": 1.2667723091448342,
+      "fano_min_error": 0.23385578398572995,
+      "fano_max_accuracy": 0.7661442160142701,
+      "fano_max_accuracy_from_plugin_mi": 0.7690386430412643,
+      "information_efficiency": 1.222681642573855,
+      "information_efficiency_from_plugin_mi": 1.2380043910988727,
       "bootstrap_ci": {
         "accuracy": {
           "ci_lower": 0.6938259109311741,
           "ci_upper": 0.7338056680161943
         },
         "achieved_mi": {
-          "ci_lower": 0.20712102328822865,
-          "ci_upper": 0.2680958802611184
+          "ci_lower": 0.19165969587473586,
+          "ci_upper": 0.2497397678533745
         },
         "fano_max_accuracy": {
-          "ci_lower": 0.7949564816198129,
-          "ci_upper": 0.7612974374781795
+          "ci_lower": 0.7518471278126941,
+          "ci_upper": 0.7853608231330057
         }
-      }
+      },
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.7069838056680162,
+        "plug_in_score_bayes_ceiling": 0.7145748987854251,
+        "accuracy_at_0.5": 0.7140688259109311,
+        "crossfit_minus_accuracy": -0.007085020242914908,
+        "crossfit_minus_accuracy_ci_lower": -0.019749493927125487,
+        "crossfit_minus_accuracy_ci_upper": 0.005060728744939238,
+        "plug_in_optimism": 0.007591093117408909,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
     },
     "xgboost": {
-      "test_accuracy": 0.6988866396761133,
-      "test_error": 0.3011133603238867,
-      "achieved_mi_bits": 0.1943288167640155,
+      "test_accuracy": 0.7029352226720648,
+      "test_error": 0.29706477732793524,
+      "roc_auc": 0.7812250291966317,
+      "achieved_mi_bits": 0.19589982708902368,
+      "achieved_mi_bits_uncorrected": 0.2019840673086971,
+      "achieved_mi_bits_knn": 0.20456236862720034,
+      "miller_madow_bias_bits": -0.006084240219673437,
       "achieved_mi_per_bin": {
-        "10": 0.18508756236111376,
-        "20": 0.19536309535580393,
-        "40": 0.20253579257512888
+        "10": 0.19802558035109605,
+        "20": 0.1993692381781297,
+        "40": 0.20855738339686555
       },
-      "fano_min_error": 0.24649071691503135,
-      "fano_max_accuracy": 0.7535092830849687,
-      "information_efficiency": 1.2216012192770915,
+      "fano_min_error": 0.24551830201298963,
+      "fano_max_accuracy": 0.7544816979870104,
+      "fano_max_accuracy_from_plugin_mi": 0.7582047598978203,
+      "information_efficiency": 1.2099496244977226,
+      "information_efficiency_from_plugin_mi": 1.2285799224269234,
       "bootstrap_ci": {
         "accuracy": {
-          "ci_lower": 0.6796432186234819,
-          "ci_upper": 0.7196356275303644
+          "ci_lower": 0.6816801619433198,
+          "ci_upper": 0.7226720647773279
         },
         "achieved_mi": {
-          "ci_lower": 0.17441803470570547,
-          "ci_upper": 0.23385592331297064
+          "ci_lower": 0.17351156416793176,
+          "ci_upper": 0.22924376556220152
         },
         "fano_max_accuracy": {
-          "ci_lower": 0.7767035978384778,
-          "ci_upper": 0.7407721113447251
+          "ci_lower": 0.7401728146158695,
+          "ci_upper": 0.7741236626522118
         }
-      }
+      },
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.7125506072874493,
+        "plug_in_score_bayes_ceiling": 0.7044534412955465,
+        "accuracy_at_0.5": 0.7029352226720648,
+        "crossfit_minus_accuracy": 0.009615384615384581,
+        "crossfit_minus_accuracy_ci_lower": -0.004048582995951455,
+        "crossfit_minus_accuracy_ci_upper": 0.023785425101214508,
+        "plug_in_optimism": -0.0080971659919028,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
     },
     "lightgbm": {
-      "test_accuracy": 0.7191295546558705,
-      "test_error": 0.2808704453441295,
-      "achieved_mi_bits": 0.21675042945044934,
+      "test_accuracy": 0.7211538461538461,
+      "test_error": 0.27884615384615385,
+      "roc_auc": 0.7941289159341898,
+      "achieved_mi_bits": 0.21195499430386344,
+      "achieved_mi_bits_uncorrected": 0.21816091932793036,
+      "achieved_mi_bits_knn": 0.2095834371727297,
+      "miller_madow_bias_bits": -0.006205925024066916,
       "achieved_mi_per_bin": {
-        "10": 0.20882289207155258,
-        "20": 0.2135256912504823,
-        "40": 0.2279027050293132
+        "10": 0.21131626814725307,
+        "20": 0.219955423433832,
+        "40": 0.22321106640270597
       },
-      "fano_min_error": 0.23302471031960653,
-      "fano_max_accuracy": 0.7669752896803934,
-      "information_efficiency": 1.205324726973804,
-      "bootstrap_ci": {
-        "accuracy": {
-          "ci_lower": 0.699380060728745,
-          "ci_upper": 0.7383603238866396
-        },
-        "achieved_mi": {
-          "ci_lower": 0.19699074486478188,
-          "ci_upper": 0.25514594837183713
-        },
-        "fano_max_accuracy": {
-          "ci_lower": 0.7882307067831065,
-          "ci_upper": 0.7551541594173389
-        }
-      }
-    },
-    "svm": {
-      "test_accuracy": 0.7241902834008097,
-      "test_error": 0.2758097165991903,
-      "achieved_mi_bits": 0.19690855150950085,
-      "achieved_mi_per_bin": {
-        "10": 0.18936799821620665,
-        "20": 0.19706417765228973,
-        "40": 0.20429347866000622
-      },
-      "fano_min_error": 0.24489660752070358,
-      "fano_max_accuracy": 0.7551033924792965,
-      "information_efficiency": 1.1262292254329138,
-      "bootstrap_ci": {
-        "accuracy": {
-          "ci_lower": 0.7044534412955465,
-          "ci_upper": 0.7439271255060729
-        },
-        "achieved_mi": {
-          "ci_lower": 0.174102097236682,
-          "ci_upper": 0.23461991260869552
-        },
-        "fano_max_accuracy": {
-          "ci_lower": 0.777127996233101,
-          "ci_upper": 0.7405634374814071
-        }
-      }
-    },
-    "knn": {
-      "test_accuracy": 0.6918016194331984,
-      "test_error": 0.3081983805668016,
-      "achieved_mi_bits": 0.1497904140802451,
-      "achieved_mi_per_bin": {
-        "10": 0.14848822505358122,
-        "20": 0.14966233920778438,
-        "40": 0.15122067797936967
-      },
-      "fano_min_error": 0.27618970110980245,
-      "fano_max_accuracy": 0.7238102988901975,
-      "information_efficiency": 1.1158938198215933,
-      "bootstrap_ci": {
-        "accuracy": {
-          "ci_lower": 0.6720647773279352,
-          "ci_upper": 0.7120571862348177
-        },
-        "achieved_mi": {
-          "ci_lower": 0.1290775216535756,
-          "ci_upper": 0.18319215204545516
-        },
-        "fano_max_accuracy": {
-          "ci_lower": 0.7464830681111813,
-          "ci_upper": 0.7082903215987163
-        }
-      }
-    },
-    "mlp": {
-      "test_accuracy": 0.7201417004048583,
-      "test_error": 0.27985829959514175,
-      "achieved_mi_bits": 0.2389165037211278,
-      "achieved_mi_per_bin": {
-        "10": 0.2315397245363977,
-        "20": 0.2387138261730395,
-        "40": 0.24649596045394614
-      },
-      "fano_min_error": 0.22050076305752625,
-      "fano_max_accuracy": 0.7794992369424738,
-      "information_efficiency": 1.2691942454735623,
+      "fano_min_error": 0.23583317110428206,
+      "fano_max_accuracy": 0.764166828895718,
+      "fano_max_accuracy_from_plugin_mi": 0.7677945534620606,
+      "information_efficiency": 1.1823873314363063,
+      "information_efficiency_from_plugin_mi": 1.2008596611475,
       "bootstrap_ci": {
         "accuracy": {
           "ci_lower": 0.7009109311740891,
-          "ci_upper": 0.7398911943319837
+          "ci_upper": 0.7403846153846154
         },
         "achieved_mi": {
-          "ci_lower": 0.21761663221095498,
-          "ci_upper": 0.27779013344878234
+          "ci_lower": 0.188792259595123,
+          "ci_upper": 0.24643360284159996
         },
         "fano_max_accuracy": {
-          "ci_lower": 0.7998605482926673,
-          "ci_upper": 0.767478849290574
+          "ci_lower": 0.7500462665298308,
+          "ci_upper": 0.783587002988375
         }
-      }
-    },
-    "soft_voting": {
-      "test_accuracy": 0.7165991902834008,
-      "test_error": 0.2834008097165992,
-      "achieved_mi_bits": 0.23654569608234755,
-      "achieved_mi_per_bin": {
-        "10": 0.22892516665118998,
-        "20": 0.2360902697955785,
-        "40": 0.24462165180027412
       },
-      "fano_min_error": 0.22180606283839976,
-      "fano_max_accuracy": 0.7781939371616002,
-      "information_efficiency": 1.277696407798714,
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.7171052631578947,
+        "plug_in_score_bayes_ceiling": 0.7165991902834008,
+        "accuracy_at_0.5": 0.7211538461538461,
+        "crossfit_minus_accuracy": -0.004048582995951455,
+        "crossfit_minus_accuracy_ci_lower": -0.013157894736842035,
+        "crossfit_minus_accuracy_ci_upper": 0.0045546558704453455,
+        "plug_in_optimism": -0.0005060728744938903,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
+    },
+    "svm": {
+      "test_accuracy": 0.7211538461538461,
+      "test_error": 0.27884615384615385,
+      "roc_auc": 0.7810529227364927,
+      "achieved_mi_bits": 0.19196240240533824,
+      "achieved_mi_bits_uncorrected": 0.19670810977668352,
+      "achieved_mi_bits_knn": 0.18528074369167577,
+      "miller_madow_bias_bits": -0.004745707371345276,
+      "achieved_mi_per_bin": {
+        "10": 0.1949092132878861,
+        "20": 0.19675036182986969,
+        "40": 0.19846475421229473
+      },
+      "fano_min_error": 0.2479636736411016,
+      "fano_max_accuracy": 0.7520363263588984,
+      "fano_max_accuracy_from_plugin_mi": 0.7549801464694886,
+      "information_efficiency": 1.1245443727767601,
+      "information_efficiency_from_plugin_mi": 1.1380553446108002,
       "bootstrap_ci": {
         "accuracy": {
-          "ci_lower": 0.6973684210526315,
-          "ci_upper": 0.7358426113360323
+          "ci_lower": 0.701417004048583,
+          "ci_upper": 0.7403846153846154
         },
         "achieved_mi": {
-          "ci_lower": 0.21499688829657246,
-          "ci_upper": 0.2763138091108758
+          "ci_lower": 0.16801787804468496,
+          "ci_upper": 0.22613702592183466
         },
         "fano_max_accuracy": {
-          "ci_lower": 0.7991206889356096,
-          "ci_upper": 0.765952730555372
+          "ci_lower": 0.7365019954511077,
+          "ci_upper": 0.7723682457063552
         }
-      }
+      },
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.72165991902834,
+        "plug_in_score_bayes_ceiling": 0.7155870445344129,
+        "accuracy_at_0.5": 0.7211538461538461,
+        "crossfit_minus_accuracy": 0.0005060728744938903,
+        "crossfit_minus_accuracy_ci_lower": -0.0010121457489878916,
+        "crossfit_minus_accuracy_ci_upper": 0.0025303643724695624,
+        "plug_in_optimism": -0.006072874493927127,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
+    },
+    "knn": {
+      "test_accuracy": 0.6816801619433198,
+      "test_error": 0.3183198380566802,
+      "roc_auc": 0.74567787407544,
+      "achieved_mi_bits": 0.14346491864910807,
+      "achieved_mi_bits_uncorrected": 0.1469937779765187,
+      "achieved_mi_bits_knn": 0.14928337915148387,
+      "miller_madow_bias_bits": -0.0035288593274106217,
+      "achieved_mi_per_bin": {
+        "10": 0.14569007805334386,
+        "20": 0.14718496332920591,
+        "40": 0.14810629254700627
+      },
+      "fano_min_error": 0.2807952445457765,
+      "fano_max_accuracy": 0.7192047554542236,
+      "fano_max_accuracy_from_plugin_mi": 0.7217878656218911,
+      "information_efficiency": 1.1336368554659988,
+      "information_efficiency_from_plugin_mi": 1.1441623089813266,
+      "bootstrap_ci": {
+        "accuracy": {
+          "ci_lower": 0.6614245951417005,
+          "ci_upper": 0.7019230769230769
+        },
+        "achieved_mi": {
+          "ci_lower": 0.12003175941953806,
+          "ci_upper": 0.17325078895676388
+        },
+        "fano_max_accuracy": {
+          "ci_lower": 0.7010811553843386,
+          "ci_upper": 0.7400000748341758
+        }
+      },
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.6725708502024291,
+        "plug_in_score_bayes_ceiling": 0.6862348178137652,
+        "accuracy_at_0.5": 0.6816801619433198,
+        "crossfit_minus_accuracy": -0.009109311740890691,
+        "crossfit_minus_accuracy_ci_lower": -0.01720647773279349,
+        "crossfit_minus_accuracy_ci_upper": -0.0015182186234817818,
+        "plug_in_optimism": 0.013663967611336036,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
+    },
+    "mlp": {
+      "test_accuracy": 0.7206477732793523,
+      "test_error": 0.27935222672064774,
+      "roc_auc": 0.801580203659311,
+      "achieved_mi_bits": 0.22467096845936788,
+      "achieved_mi_bits_uncorrected": 0.2308768934834348,
+      "achieved_mi_bits_knn": 0.2152696228851009,
+      "miller_madow_bias_bits": -0.006205925024066916,
+      "achieved_mi_per_bin": {
+        "10": 0.2238002233732309,
+        "20": 0.23230754158360034,
+        "40": 0.2365229154934731
+      },
+      "fano_min_error": 0.22846513328330806,
+      "fano_max_accuracy": 0.7715348667166919,
+      "fano_max_accuracy_from_plugin_mi": 0.7750407289752071,
+      "information_efficiency": 1.2227346147135596,
+      "information_efficiency_from_plugin_mi": 1.2417902380642947,
+      "bootstrap_ci": {
+        "accuracy": {
+          "ci_lower": 0.7009109311740891,
+          "ci_upper": 0.7398785425101214
+        },
+        "achieved_mi": {
+          "ci_lower": 0.2015619522001287,
+          "ci_upper": 0.2592810574979448
+        },
+        "fano_max_accuracy": {
+          "ci_lower": 0.7579485896447369,
+          "ci_upper": 0.7904007685117214
+        }
+      },
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.7206477732793523,
+        "plug_in_score_bayes_ceiling": 0.7165991902834008,
+        "accuracy_at_0.5": 0.7206477732793523,
+        "crossfit_minus_accuracy": 0.0,
+        "crossfit_minus_accuracy_ci_lower": -0.009109311740890691,
+        "crossfit_minus_accuracy_ci_upper": 0.009109311740890691,
+        "plug_in_optimism": -0.004048582995951455,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
+    },
+    "soft_voting": {
+      "test_accuracy": 0.7171052631578947,
+      "test_error": 0.2828947368421053,
+      "roc_auc": 0.8051247771836008,
+      "achieved_mi_bits": 0.23048663416523488,
+      "achieved_mi_bits_uncorrected": 0.23839614645081034,
+      "achieved_mi_bits_knn": 0.25357242562909293,
+      "miller_madow_bias_bits": -0.00790951228557546,
+      "achieved_mi_per_bin": {
+        "10": 0.2317876391842777,
+        "20": 0.23834957034026263,
+        "40": 0.2450512298278907
+      },
+      "fano_min_error": 0.22517806263485332,
+      "fano_max_accuracy": 0.7748219373651467,
+      "fano_max_accuracy_from_plugin_mi": 0.7792135731632125,
+      "information_efficiency": 1.2563157064764556,
+      "information_efficiency_from_plugin_mi": 1.2813049284557259,
+      "bootstrap_ci": {
+        "accuracy": {
+          "ci_lower": 0.6968623481781376,
+          "ci_upper": 0.736336032388664
+        },
+        "achieved_mi": {
+          "ci_lower": 0.2089466465668864,
+          "ci_upper": 0.2684432359838925
+        },
+        "fano_max_accuracy": {
+          "ci_lower": 0.7623856900383297,
+          "ci_upper": 0.7951340906651582
+        }
+      },
+      "score_bayes": {
+        "crossfit_score_bayes_ceiling": 0.7135627530364372,
+        "plug_in_score_bayes_ceiling": 0.7186234817813765,
+        "accuracy_at_0.5": 0.7171052631578947,
+        "crossfit_minus_accuracy": -0.003542510121457454,
+        "crossfit_minus_accuracy_ci_lower": -0.0161943319838056,
+        "crossfit_minus_accuracy_ci_upper": 0.008603238866396693,
+        "plug_in_optimism": 0.005060728744939236,
+        "n_folds": 5,
+        "n_bins": 10,
+        "note": "For a calibrated score the 0.5-threshold rule is the Bayes rule, so accuracy == A_SB identically; only the cross-fitted estimate is informative. A negative difference reflects the loss from using a decile instead of the continuous score, not slack."
+      },
+      "eta_note": "eta >= 1 holds by Jensen for the plug-in estimator with the plug-in mutual information, so it is an arithmetic/log-base check rather than evidence; only the binning-free estimate can violate it in principle."
     }
   },
   "pairwise_mcnemar": {
     "n_pairs": 21,
-    "method": "continuity-corrected McNemar with Holm-Bonferroni (family-wise alpha=0.05)",
+    "n_test": 1976,
+    "method": "exact binomial McNemar (primary) with Holm-Bonferroni step-down at family-wise alpha = 0.05",
+    "n_discordant_min": 109,
     "pairs": {
       "logistic_regression vs random_forest": {
-        "chi2": 0.4413793103448276,
-        "p_value": 0.5064574712477685,
-        "n01": 77,
-        "n10": 68,
-        "significant_after_holm": false
+        "n01": 85,
+        "n10": 72,
+        "n_discordant": 157,
+        "chi2": 1.0764331210191083,
+        "p_value": 0.33823533079501217,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 1.7729884241099731
       },
       "logistic_regression vs xgboost": {
-        "chi2": 5.08235294117647,
-        "p_value": 0.024170547174545254,
-        "n01": 146,
-        "n10": 109,
-        "significant_after_holm": false
+        "n01": 160,
+        "n10": 125,
+        "n_discordant": 285,
+        "chi2": 4.298245614035087,
+        "p_value": 0.043821603408675185,
+        "p_value_holm": 0.6135024477214526,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.3887929237718017
       },
       "logistic_regression vs lightgbm": {
-        "chi2": 0.023391812865497075,
-        "p_value": 0.8784425770029625,
-        "n01": 84,
-        "n10": 87,
-        "significant_after_holm": false
+        "n01": 107,
+        "n10": 108,
+        "n_discordant": 215,
+        "chi2": 0.004651162790697674,
+        "p_value": 1.0,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.0747955308452366
       },
       "logistic_regression vs svm": {
-        "chi2": 1.4257425742574257,
-        "p_value": 0.232460511220827,
-        "n01": 44,
-        "n10": 57,
-        "significant_after_holm": false
+        "n01": 54,
+        "n10": 55,
+        "n_discordant": 109,
+        "chi2": 0.009174311926605505,
+        "p_value": 1.0,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 1.477302126103566
       },
       "logistic_regression vs knn": {
-        "chi2": 6.3938618925831205,
-        "p_value": 0.011451562402675641,
-        "n01": 221,
-        "n10": 170,
-        "significant_after_holm": false
+        "n01": 266,
+        "n10": 189,
+        "n_discordant": 455,
+        "chi2": 13.03076923076923,
+        "p_value": 0.0003561048262638582,
+        "p_value_holm": 0.006409886872749447,
+        "significant_after_holm": true,
+        "mde_accuracy_points": 3.018295611103163
       },
       "logistic_regression vs mlp": {
-        "chi2": 0.1415929203539823,
-        "p_value": 0.7067025412874823,
-        "n01": 54,
-        "n10": 59,
-        "significant_after_holm": false
+        "n01": 73,
+        "n10": 73,
+        "n_discordant": 146,
+        "chi2": 0.0,
+        "p_value": 1.0,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 1.7097495644752942
       },
       "random_forest vs xgboost": {
-        "chi2": 3.2544642857142856,
-        "p_value": 0.07122920898868679,
-        "n01": 126,
-        "n10": 98,
-        "significant_after_holm": false
+        "n01": 136,
+        "n10": 114,
+        "n_discordant": 250,
+        "chi2": 1.936,
+        "p_value": 0.18401510764714676,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.2373095592114205
       },
       "random_forest vs lightgbm": {
-        "chi2": 0.8897058823529411,
-        "p_value": 0.3455570234313007,
-        "n01": 62,
-        "n10": 74,
-        "significant_after_holm": false
+        "n01": 73,
+        "n10": 87,
+        "n_discordant": 160,
+        "chi2": 1.225,
+        "p_value": 0.3040598777154104,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 1.789847647369136
       },
       "random_forest vs svm": {
-        "chi2": 3.556451612903226,
-        "p_value": 0.059314406470354686,
-        "n01": 51,
-        "n10": 73,
-        "significant_after_holm": false
+        "n01": 60,
+        "n10": 74,
+        "n_discordant": 134,
+        "chi2": 1.462686567164179,
+        "p_value": 0.2613502966249506,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 1.6379795414363383
       },
       "random_forest vs knn": {
-        "chi2": 4.494652406417113,
-        "p_value": 0.034001025401393714,
-        "n01": 208,
-        "n10": 166,
-        "significant_after_holm": false
+        "n01": 229,
+        "n10": 165,
+        "n_discordant": 394,
+        "chi2": 10.395939086294415,
+        "p_value": 0.0014725397851545247,
+        "p_value_holm": 0.025033176347626918,
+        "significant_after_holm": true,
+        "mde_accuracy_points": 2.8086924367848374
       },
       "random_forest vs mlp": {
-        "chi2": 1.1575342465753424,
-        "p_value": 0.28197750355715034,
-        "n01": 66,
-        "n10": 80,
-        "significant_after_holm": false
+        "n01": 99,
+        "n10": 112,
+        "n_discordant": 211,
+        "chi2": 0.8009478672985783,
+        "p_value": 0.40879939923849284,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.0554044929880706
       },
       "xgboost vs lightgbm": {
-        "chi2": 6.730088495575221,
-        "p_value": 0.0094799896468718,
-        "n01": 93,
-        "n10": 133,
-        "significant_after_holm": false
+        "n01": 114,
+        "n10": 150,
+        "n_discordant": 264,
+        "chi2": 4.909090909090909,
+        "p_value": 0.031037644716382123,
+        "p_value_holm": 0.496602315462114,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.2991009310833164
       },
       "xgboost vs svm": {
-        "chi2": 9.760162601626016,
-        "p_value": 0.0017833413680391486,
-        "n01": 98,
-        "n10": 148,
-        "significant_after_holm": true
+        "n01": 120,
+        "n10": 156,
+        "n_discordant": 276,
+        "chi2": 4.695652173913044,
+        "p_value": 0.034948876234654654,
+        "p_value_holm": 0.5242331435198198,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.3507725722339954
       },
       "xgboost vs knn": {
-        "chi2": 0.38940092165898615,
-        "p_value": 0.5326144708972826,
-        "n01": 224,
-        "n10": 210,
-        "significant_after_holm": false
+        "n01": 246,
+        "n10": 204,
+        "n_discordant": 450,
+        "chi2": 3.92,
+        "p_value": 0.053145128264848455,
+        "p_value_holm": 0.6377415391781814,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 3.001665756664096
       },
       "xgboost vs mlp": {
-        "chi2": 6.724,
-        "p_value": 0.009512404872503377,
-        "n01": 104,
-        "n10": 146,
-        "significant_after_holm": false
+        "n01": 128,
+        "n10": 163,
+        "n_discordant": 291,
+        "chi2": 4.209621993127148,
+        "p_value": 0.046062688567741546,
+        "p_value_holm": 0.6135024477214526,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.4138071443659213
       },
       "lightgbm vs svm": {
-        "chi2": 0.5192307692307693,
-        "p_value": 0.4711699984900556,
-        "n01": 73,
-        "n10": 83,
-        "significant_after_holm": false
+        "n01": 97,
+        "n10": 97,
+        "n_discordant": 194,
+        "chi2": 0.0,
+        "p_value": 1.0,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 1.9708652803936928
       },
       "lightgbm vs knn": {
-        "chi2": 7.165816326530612,
-        "p_value": 0.007430586826488228,
-        "n01": 223,
-        "n10": 169,
-        "significant_after_holm": false
+        "n01": 243,
+        "n10": 165,
+        "n_discordant": 408,
+        "chi2": 14.911764705882353,
+        "p_value": 0.0001319759715451115,
+        "p_value_holm": 0.0027714954024473416,
+        "significant_after_holm": true,
+        "mde_accuracy_points": 2.8581574890166084
       },
       "lightgbm vs mlp": {
-        "chi2": 0.0056179775280898875,
-        "p_value": 0.9402519728279188,
-        "n01": 88,
-        "n10": 90,
-        "significant_after_holm": false
+        "n01": 135,
+        "n10": 134,
+        "n_discordant": 269,
+        "chi2": 0.0037174721189591076,
+        "p_value": 0.9999999999999996,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 2.3207705988707605
       },
       "svm vs knn": {
-        "chi2": 11.08659217877095,
-        "p_value": 0.0008695413174234501,
-        "n01": 211,
-        "n10": 147,
-        "significant_after_holm": true
+        "n01": 247,
+        "n10": 169,
+        "n_discordant": 416,
+        "chi2": 14.625,
+        "p_value": 0.00015347159661585602,
+        "p_value_holm": 0.0030694319323171203,
+        "significant_after_holm": true,
+        "mde_accuracy_points": 2.8860426126551495
       },
       "svm vs mlp": {
-        "chi2": 0.46226415094339623,
-        "p_value": 0.49656771600723437,
-        "n01": 57,
-        "n10": 49,
-        "significant_after_holm": false
+        "n01": 73,
+        "n10": 72,
+        "n_discordant": 145,
+        "chi2": 0.006896551724137931,
+        "p_value": 1.0,
+        "p_value_holm": 1.0,
+        "significant_after_holm": false,
+        "mde_accuracy_points": 1.7038841970534568
       },
       "knn vs mlp": {
-        "chi2": 7.9605263157894735,
-        "p_value": 0.004780851001183861,
-        "n01": 162,
-        "n10": 218,
-        "significant_after_holm": false
+        "n01": 187,
+        "n10": 264,
+        "n_discordant": 451,
+        "chi2": 13.146341463414634,
+        "p_value": 0.00033503230734322696,
+        "p_value_holm": 0.006365613839521312,
+        "significant_after_holm": true,
+        "mde_accuracy_points": 3.004999090013971
       }
     },
-    "n_significant_after_holm": 2
+    "sensitivity_p_values": {
+      "chi2": {
+        "logistic_regression vs random_forest": 0.29949686370661616,
+        "logistic_regression vs xgboost": 0.038151710173415225,
+        "logistic_regression vs lightgbm": 0.9456268775689063,
+        "logistic_regression vs svm": 0.9236932143490357,
+        "logistic_regression vs knn": 0.00030641466415224814,
+        "logistic_regression vs mlp": 1.0,
+        "random_forest vs xgboost": 0.16410350682578279,
+        "random_forest vs lightgbm": 0.2683816272927576,
+        "random_forest vs svm": 0.226503143136717,
+        "random_forest vs knn": 0.001262927538719253,
+        "random_forest vs mlp": 0.3708101238157413,
+        "xgboost vs lightgbm": 0.026715698447179477,
+        "xgboost vs svm": 0.030239021016148563,
+        "xgboost vs knn": 0.04771488023735101,
+        "xgboost vs mlp": 0.04019529340388998,
+        "lightgbm vs svm": 1.0,
+        "lightgbm vs knn": 0.00011265822447314726,
+        "lightgbm vs mlp": 0.9513822441261013,
+        "svm vs knn": 0.00013116297592663035,
+        "svm vs mlp": 0.9338153767881676,
+        "knn vs mlp": 0.0002880811910700386
+      },
+      "chi2_cc": {
+        "logistic_regression vs random_forest": 0.3382119073466782,
+        "logistic_regression vs xgboost": 0.044010984012951504,
+        "logistic_regression vs lightgbm": 1.0,
+        "logistic_regression vs svm": 1.0,
+        "logistic_regression vs knn": 0.00036673157148473754,
+        "logistic_regression vs mlp": 1.0,
+        "random_forest vs xgboost": 0.1841263727849757,
+        "random_forest vs lightgbm": 0.30407203391686594,
+        "random_forest vs svm": 0.2614251980018072,
+        "random_forest vs knn": 0.0015040853261495337,
+        "random_forest vs mlp": 0.40873938755416916,
+        "xgboost vs lightgbm": 0.03123224492154382,
+        "xgboost vs svm": 0.03513904497258644,
+        "xgboost vs knn": 0.053265950535906756,
+        "xgboost vs mlp": 0.046248823215909035,
+        "lightgbm vs svm": 1.0,
+        "lightgbm vs knn": 0.00013780892685938658,
+        "lightgbm vs mlp": 1.0,
+        "svm vs knn": 0.00015985650209485018,
+        "svm vs mlp": 1.0,
+        "knn vs mlp": 0.00034530726134178154
+      }
+    },
+    "n_significant_uncorrected": 9,
+    "n_significant_after_holm": 5,
+    "mde_holm_aware_range_pts": [
+      1.7038841970534568,
+      4.122322622649742
+    ]
+  },
+  "learning_curves": {
+    "logistic_regression": {
+      "train_sizes": [
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        0.9
+      ],
+      "mean_accuracy": [
+        0.7020242914979757,
+        0.7107287449392713,
+        0.7151821862348178,
+        0.7200404858299595,
+        0.7181174089068826,
+        0.7195344129554655,
+        0.7189271255060729
+      ],
+      "std_accuracy": [
+        0.012789734167310957,
+        0.008196193540449674,
+        0.0049765262222427,
+        0.00215898066879569,
+        0.002530364372469657,
+        0.0008315625873054211,
+        0.0015842586885120038
+      ],
+      "mean_achieved_mi": [
+        0.18144852172651968,
+        0.2058094019370909,
+        0.21833782941049,
+        0.22805112949411677,
+        0.22747373774497973,
+        0.2289955539492951,
+        0.23031612623779782
+      ],
+      "std_achieved_mi": [
+        0.00978947140768871,
+        0.010491753158047113,
+        0.007219640186420707,
+        0.006199213662504513,
+        0.0019182874155335202,
+        0.0021434267437765346,
+        0.0024153476604171884
+      ],
+      "accuracy_slope_per_log2": 0.003816352876975731,
+      "accuracy_slope_p": 0.002657096799999872,
+      "mi_slope_per_log2": 0.01065747124793218,
+      "mi_slope_p": 0.0014656561758586305,
+      "accuracy_slope_wls_per_log2": 0.0016864020374716287,
+      "accuracy_slope_wls_p": 0.11923032420244388,
+      "accuracy_slope_wls_ci": [
+        -7.392738751337891e-05,
+        0.003446731462456636
+      ],
+      "mi_slope_wls_per_log2": 0.008643356070103145,
+      "mi_slope_wls_p": 0.003337113215666848,
+      "accuracy_curvature": {
+        "quadratic_coefficient": -0.0013251482850812487,
+        "quadratic_p_value": 0.00419784804997935,
+        "r2": 0.9853852365583995,
+        "dof": 4
+      },
+      "mi_curvature": {
+        "quadratic_coefficient": -0.0033383178107973515,
+        "quadratic_p_value": 0.0008699354536120975,
+        "r2": 0.9946786672044937,
+        "dof": 4
+      }
+    },
+    "lightgbm": {
+      "train_sizes": [
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        0.9
+      ],
+      "mean_accuracy": [
+        0.6996963562753036,
+        0.7050607287449393,
+        0.7011133603238866,
+        0.7088056680161943,
+        0.71082995951417,
+        0.713663967611336,
+        0.7144736842105263
+      ],
+      "std_accuracy": [
+        0.008427291075249914,
+        0.012095035826955201,
+        0.006944455827090842,
+        0.004835578617648273,
+        0.006005019017891205,
+        0.008028874463892445,
+        0.0024375697527919847
+      ],
+      "mean_achieved_mi": [
+        0.1584940872461646,
+        0.16767678660930596,
+        0.18019638021974488,
+        0.19682756726783432,
+        0.1987100862996544,
+        0.20715958088752218,
+        0.21167161073640522
+      ],
+      "std_achieved_mi": [
+        0.011114051915599294,
+        0.012890803552053277,
+        0.005567327236806339,
+        0.003861685409821939,
+        0.003914768092393514,
+        0.006544130172860909,
+        0.004523181666916136
+      ],
+      "accuracy_slope_per_log2": 0.0033851869672081245,
+      "accuracy_slope_p": 0.0035579470569044136,
+      "mi_slope_per_log2": 0.012644712319389522,
+      "mi_slope_p": 5.61168973567119e-06,
+      "accuracy_slope_wls_per_log2": 0.004042016123245587,
+      "accuracy_slope_wls_p": 0.0010052939342038345,
+      "accuracy_slope_wls_ci": [
+        0.0028873101850338378,
+        0.005196722061457337
+      ],
+      "mi_slope_wls_per_log2": 0.012801543360634183,
+      "mi_slope_wls_p": 8.604626911181089e-05,
+      "accuracy_curvature": {
+        "quadratic_coefficient": 0.0007514251221103971,
+        "quadratic_p_value": 0.24172279946540015,
+        "r2": 0.892851406075294,
+        "dof": 4
+      },
+      "mi_curvature": {
+        "quadratic_coefficient": 0.0005998455786612022,
+        "quadratic_p_value": 0.34608732581042856,
+        "r2": 0.9904994656898247,
+        "dof": 4
+      }
+    },
+    "knn": {
+      "train_sizes": [
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.6,
+        0.8,
+        0.9
+      ],
+      "mean_accuracy": [
+        0.6810728744939272,
+        0.6813765182186236,
+        0.6824898785425101,
+        0.6861336032388664,
+        0.6861336032388664,
+        0.6843117408906882,
+        0.6855263157894737
+      ],
+      "std_accuracy": [
+        0.011832801979033305,
+        0.00882803478884441,
+        0.009552586322906054,
+        0.00427024759306253,
+        0.0029811085981827795,
+        0.004872512106036796,
+        0.004520791788284855
+      ],
+      "mean_achieved_mi": [
+        0.13540656547550478,
+        0.1370705502045157,
+        0.13990724859921405,
+        0.14817766389885598,
+        0.14338742656247536,
+        0.14518480106510048,
+        0.14547897247210867
+      ],
+      "std_achieved_mi": [
+        0.013306704769323401,
+        0.008818855814664215,
+        0.009830343778310916,
+        0.006409052651518063,
+        0.006561406355738859,
+        0.0019925107287872847,
+        0.0018275797688332696
+      ],
+      "accuracy_slope_per_log2": 0.0012127050146524608,
+      "accuracy_slope_p": 0.00968632972250784,
+      "mi_slope_per_log2": 0.0026358950596995817,
+      "mi_slope_p": 0.007830904537903246,
+      "accuracy_slope_wls_per_log2": 0.00106244521961396,
+      "accuracy_slope_wls_p": 0.09246792770960695,
+      "accuracy_slope_wls_ci": [
+        5.962553692472907e-05,
+        0.002065264902303191
+      ],
+      "mi_slope_wls_per_log2": 0.0021340613960343967,
+      "mi_slope_wls_p": 0.030974562333615323,
+      "accuracy_curvature": {
+        "quadratic_coefficient": -0.00011196096386049301,
+        "quadratic_p_value": 0.7255375712906731,
+        "r2": 0.7756176987099377,
+        "dof": 4
+      },
+      "mi_curvature": {
+        "quadratic_coefficient": -0.00038417322416477693,
+        "quadratic_p_value": 0.5526113025783744,
+        "r2": 0.8062286189396211,
+        "dof": 4
+      }
+    }
   },
   "learning_curve": {
     "train_sizes": [
@@ -412,25 +986,28 @@
       0.4,
       0.6,
       0.8,
-      1.0
+      0.9
     ],
     "mean_accuracy": [
-      0.6952429149797571,
-      0.7038461538461538,
-      0.7017206477732794,
-      0.7021255060728745,
-      0.7057692307692307,
-      0.7069838056680162,
-      0.7105263157894737
+      0.6996963562753036,
+      0.7050607287449393,
+      0.7011133603238866,
+      0.7088056680161943,
+      0.71082995951417,
+      0.713663967611336,
+      0.7144736842105263
     ],
     "std_accuracy": [
-      0.007371312330377783,
-      0.006770037047850472,
-      0.004325072999842424,
-      0.004666859062104658,
-      0.0026315789473684097,
-      0.005091002566785142,
-      0.0
+      0.008427291075249914,
+      0.012095035826955201,
+      0.006944455827090842,
+      0.004835578617648273,
+      0.006005019017891205,
+      0.008028874463892445,
+      0.0024375697527919847
     ]
-  }
+  },
+  "n_fit_rows": 6717,
+  "n_calibration_rows": 1186,
+  "n_test_rows": 1976
 }

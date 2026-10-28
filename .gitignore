@@ -31,5 +31,25 @@ Thumbs.db
 # Jupyter notebooks checkpoint files
 .ipynb_checkpoints/
 
-# Paper folder
-paper/
+# Paper folder: track only the submission package; ignore other drafts.
+paper/information_ceiling/
+paper/reviews/
+# LaTeX build artifacts inside the submission package.
+paper/entropy_submission/*.aux
+paper/entropy_submission/*.log
+paper/entropy_submission/*.out
+paper/entropy_submission/*.bbl
+paper/entropy_submission/*.blg
+paper/entropy_submission/*.toc
+paper/entropy_submission/*.lof
+paper/entropy_submission/*.lot
+
+# The manuscript itself is kept out of the public repository until the paper is
+# published. Only the code, the JSON artifacts and the 600 dpi figures that back
+# the reported numbers are tracked, which is what the Data Availability
+# statement promises.
+paper/entropy_submission/main.tex
+paper/entropy_submission/main.pdf
+paper/entropy_submission/supplementary.tex
+paper/entropy_submission/supplementary.pdf
+paper/entropy_submission/Definitions/
